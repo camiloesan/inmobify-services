@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "auth",
+    "users",
+    "properties",
+    "payments",
+]
+
+[workspace.dependencies]
+dotenvy = "0.15"
+log = "*"
+env_logger = "*"
