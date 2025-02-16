@@ -4,3 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+dotenvy = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
