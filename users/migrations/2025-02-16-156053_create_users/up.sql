@@ -6,5 +6,5 @@ create table users (
     phone varchar(10) not null,
     password varchar(36) not null,
     created_at timestamp default current_timestamp not null,
-    user_type_id integer not null
+    user_type_id integer not null references user_types (id)
 );

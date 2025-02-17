@@ -41,7 +41,14 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
 
         #[derive(OpenApi)]
-        #[openapi(paths(routes::create_user), components(schemas(dto_models::User)))]
+        #[openapi(
+            paths(
+                routes::create_user,
+                routes::get_user_by_uuid,
+                routes::delete_user_by_uuid
+            ),
+            components(schemas(dto_models::User, dto_models::NewUser))
+        )]
         struct ApiDoc;
         let openapi = ApiDoc::openapi();
 
@@ -51,9 +58,10 @@ async fn main() -> std::io::Result<()> {
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
             .service(routes::create_user)
+            .service(routes::get_user_by_uuid)
             .wrap(cors)
     })
-    .bind("0.0.0.0:8080")?
+    .bind("0.0.0.0:12000")?
     .run()
     .await
 }

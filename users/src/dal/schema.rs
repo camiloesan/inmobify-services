@@ -27,6 +27,8 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(users -> user_types (user_type_id));
+
 diesel::allow_tables_to_appear_in_same_query!(
     user_types,
     users,
