@@ -6,6 +6,7 @@ members = [
     "users",
     "properties",
     "payments",
+    "appointments",
 ]
 
 [workspace.dependencies]

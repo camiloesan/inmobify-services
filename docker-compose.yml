@@ -38,9 +38,20 @@ services:
       dockerfile: users/Dockerfile
     env_file:
       - users/.env
-    image: users/latest
+    image: users:latest
     ports:
       - "12000:12004"
+    depends_on:
+      - inmobify_db
+  appointments:
+    build: 
+      context: .
+      dockerfile: appointments/Dockerfile
+    env_file:
+      - appointments/.env
+    image: appointments:latest
+    ports:
+      - "12000:12005"
     depends_on:
       - inmobify_db
   inmobify_db:
