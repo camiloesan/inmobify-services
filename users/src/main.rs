@@ -1,6 +1,6 @@
 mod dal;
-mod dto_models;
 mod routes;
+mod dto;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
@@ -47,10 +47,10 @@ async fn main() -> std::io::Result<()> {
                 routes::get_user_by_uuid,
                 routes::delete_user_by_uuid
             ),
-            components(schemas(dto_models::User, dto_models::NewUser))
+            components(schemas(dto::user::User, dto::new_user::NewUser))
         )]
         struct ApiDoc;
-        let openapi = ApiDoc::openapi();
+        let openapi = ApiDoc::openapi();        
 
         App::new()
             .app_data(web::Data::new(repo.clone()))

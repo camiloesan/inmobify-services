@@ -1,6 +1,6 @@
 use crate::{
     dal::{db_operations::PgUsers, repository::UsersRepository},
-    dto_models::NewUser,
+    dto::new_user::NewUser,
 };
 use actix_web::{
     delete, get, post,

@@ -37,7 +37,7 @@ impl PgUsers {
 }
 
 impl UsersRepository for PgUsers {
-    fn create_user(&self, user: crate::dto_models::NewUser) -> Option<String> {
+    fn create_user(&self, user: crate::dto::new_user::NewUser) -> Option<String> {
         use crate::dal::schema::users;
 
         let uuid = Uuid::new_v4();
@@ -65,7 +65,7 @@ impl UsersRepository for PgUsers {
         }
     }
 
-    fn get_user_by_uuid(&self, uuid: Uuid) -> Option<crate::dto_models::User> {
+    fn get_user_by_uuid(&self, uuid: Uuid) -> Option<crate::dto::user::User> {
         use crate::dal::schema::users::dsl::*;
 
         let conn = &mut self.get_connection();
@@ -76,7 +76,7 @@ impl UsersRepository for PgUsers {
         .optional();
 
         match result {
-            Ok(Some(user)) => Some(crate::dto_models::User {
+            Ok(Some(user)) => Some(crate::dto::user::User {
                 id: user.id.to_string(),
                 name: user.name,
                 last_name: user.last_name,
@@ -93,7 +93,7 @@ impl UsersRepository for PgUsers {
         }
     }
 
-    fn update_user_by_uuid(&self, uuid: Uuid, updated_user: UpdateUser) -> Option<crate::dto_models::User> {
+    fn update_user_by_uuid(&self, uuid: Uuid, updated_user: UpdateUser) -> Option<crate::dto::user::User> {
         use crate::dal::schema::users::dsl::*;
 
         let conn = &mut self.get_connection();
@@ -103,7 +103,7 @@ impl UsersRepository for PgUsers {
         .get_result::<User>(conn);
 
         match result {
-            Ok(user) => Some(crate::dto_models::User {
+            Ok(user) => Some(crate::dto::user::User {
                 id: user.id.to_string(),
                 name: user.name,
                 last_name: user.last_name,
@@ -144,7 +144,7 @@ mod tests {
     fn test_create_user() {
         // set up
         let repo = PgUsers::_test();
-        let user = crate::dto_models::NewUser {
+        let user = crate::dto::new_user::NewUser {
             name: "Mariana".to_string(),
             last_name: "Gonzáles Pérez".to_string(),
             email: "marg@gmail.com".to_string(),
@@ -167,7 +167,7 @@ mod tests {
     fn test_get_user() {
         // set up
         let repo = PgUsers::_test();
-        let user = crate::dto_models::NewUser {
+        let user = crate::dto::new_user::NewUser {
             name: "Mariana".to_string(),
             last_name: "Gonzáles Pérez".to_string(),
             email: "marg@gmail.com".to_string(),
@@ -195,7 +195,7 @@ mod tests {
     fn test_update_user() {
         // set up
         let repo = PgUsers::_test();
-        let user = crate::dto_models::NewUser {
+        let user = crate::dto::new_user::NewUser {
             name: "Mariana".to_string(),
             last_name: "Gonzáles Pérez".to_string(),
             email: "marg@gmail.com".to_string(),

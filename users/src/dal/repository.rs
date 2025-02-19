@@ -1,6 +1,7 @@
 use uuid::Uuid;
 
-use crate::dto_models::{NewUser, User};
+use crate::dto::user::User;
+use crate::dto::new_user::NewUser;
 
 use super::sch_models::UpdateUser;
 
