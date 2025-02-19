@@ -20,7 +20,7 @@ impl PgUsers {
 
     pub fn _test() -> Self {
         dotenv().ok();
-        let local_db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let local_db_url = env::var("LOCAL_DB_URL").expect("LOCAL_DB_URL must be set");
         Self { url: local_db_url }
     }
 
