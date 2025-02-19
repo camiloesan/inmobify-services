@@ -320,6 +320,21 @@ dependencies = [
 [[package]]
 name = "appointments"
 version = "0.1.0"
+dependencies = [
+ "actix-cors",
+ "actix-web",
+ "chrono",
+ "diesel",
+ "diesel_migrations",
+ "dotenvy",
+ "env_logger",
+ "log",
+ "serde",
+ "serde_json",
+ "utoipa",
+ "utoipa-swagger-ui",
+ "uuid",
+]
 
 [[package]]
 name = "auth"

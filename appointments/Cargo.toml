@@ -4,3 +4,16 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+dotenvy = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+diesel = { version = "2.2.0", features = ["postgres", "uuid", "chrono"] }
+diesel_migrations = "*"
+uuid = { version = "1.4", features = ["v4"] }
+chrono = "*"
+serde = { version = "1.0", features = ["derive"] }
+actix-web = "4.0"
+actix-cors = "0.7.0"
+serde_json = "1.0"
+utoipa = { version = "4.2.0", features = ["actix_extras"] }
+utoipa-swagger-ui = { version = "6.0.0", features = ["actix-web"] }
