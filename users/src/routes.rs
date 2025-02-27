@@ -7,7 +7,9 @@ use actix_web::{
     web::{self},
     HttpResponse, Responder,
 };
+//use actix_web_validator::Json;
 use log::{error, info};
+use validator::Validate;
 
 /// Create a user based on its json DTO.
 #[utoipa::path(
@@ -21,6 +23,10 @@ use log::{error, info};
 pub async fn create_user(repo: web::Data<PgUsers>, data: web::Json<NewUser>) -> impl Responder {
     info!("request to create user received");
 
+    if let Err(errors) = data.validate() {
+        return HttpResponse::BadRequest().json(errors);
+    }
+    
     let result = web::block(move || repo.create_user(data.0.clone())).await;
     match result {
         Ok(Some(uuid)) => HttpResponse::Created().json(uuid),
