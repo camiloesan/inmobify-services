@@ -17,7 +17,7 @@ use log::{error, info};
         (status = 500, description = "Internal server error occurred."),
     )
 )]
-#[post("/user")]
+#[post("/users")]
 pub async fn create_user(repo: web::Data<PgUsers>, data: web::Json<NewUser>) -> impl Responder {
     info!("request to create user received");
 
@@ -39,7 +39,7 @@ pub async fn create_user(repo: web::Data<PgUsers>, data: web::Json<NewUser>) -> 
         (status = 500, description = "Internal server error occurred."),
     )
 )]
-#[get("/user/{id}")]
+#[get("/users/{id}")]
 pub async fn get_user_by_uuid(repo: web::Data<PgUsers>, path: web::Path<String>) -> impl Responder {
     info!("request to get user received");
 
@@ -64,7 +64,7 @@ pub async fn get_user_by_uuid(repo: web::Data<PgUsers>, path: web::Path<String>)
         (status = 500, description = "Internal server error occurred."),
     )
 )]
-#[delete("/user/{id}")]
+#[delete("/users/{id}")]
 pub async fn delete_user_by_uuid(
     repo: web::Data<PgUsers>,
     path: web::Path<String>,
