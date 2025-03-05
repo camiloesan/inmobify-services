@@ -1,11 +1,8 @@
+use crate::DbPool;
 use actix_web::{
-    get,
-    web::{self},
-    HttpResponse, Responder,
+    get, web::{self}, HttpResponse, Responder
 };
-
 use log::{error, info};
-
 use crate::{
     dal::{db_operations::PgProperties, repository::PropertiesRepository},
     dto::property_summary::PropertySummary,
@@ -19,10 +16,22 @@ use crate::{
     )
 )]
 #[get("/boosted-properties")]
-pub async fn fetch_boosted_properties(repo: web::Data<PgProperties>) -> impl Responder {
+pub async fn fetch_boosted_properties(
+    pool: web::Data<DbPool>,
+) -> impl Responder {
     info!("request to get boosted properties");
 
-    let result = web::block(move || repo.fetch_top_properties()).await;
+    let result = web::block(move || {
+        let conn_result = pool.get();
+        match conn_result {
+            Ok(mut conn) => PgProperties::fetch_top_properties(&mut conn),
+            Err(e) => {
+                error!("Failed to get connection from pool {}", e);
+                vec![]
+            },
+        }
+    })
+    .await;
 
     match result {
         Ok(properties_list) => {

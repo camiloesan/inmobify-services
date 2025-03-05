@@ -11,23 +11,13 @@ use log::error;
 use std::env;
 
 #[derive(Clone)]
-pub struct PgProperties {
-    url: String,
-}
+pub struct PgProperties {}
 
 impl PgProperties {
-    pub fn new(url: String) -> Self {
-        Self { url }
-    }
-
-    pub fn _test() -> Self {
+    fn _tests_get_connection() -> PgConnection {
         dotenv().ok();
         let local_db_url = env::var("LOCAL_DB_URL").expect("LOCAL_DB_URL must be set");
-        Self { url: local_db_url }
-    }
-
-    fn get_connection(&self) -> PgConnection {
-        let conn = PgConnection::establish(&self.url);
+        let conn = PgConnection::establish(&local_db_url);
         match conn {
             Ok(result) => result,
             Err(e) => {
@@ -39,10 +29,9 @@ impl PgProperties {
 }
 
 impl PropertiesRepository for PgProperties {
-    fn fetch_top_properties(&self) -> Vec<PropertyWithDetails> {
+    fn fetch_top_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails> {
         use crate::dal::schema::properties::dsl::properties;
 
-        let conn = &mut self.get_connection();
         let result = properties
             .limit(10)
             .inner_join(locations::table
@@ -80,9 +69,8 @@ mod tests {
 
     #[test]
     fn test_fetch_top_properties() {
-        let repo = PgProperties::_test();
-        let result = repo.fetch_top_properties();
-        print!("{:?}", result);
+        let mut conn = PgProperties::_tests_get_connection();
+        let result = PgProperties::fetch_top_properties(&mut conn);
         assert!(!result.is_empty());
     }
 }
