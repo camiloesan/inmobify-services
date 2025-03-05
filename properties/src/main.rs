@@ -41,7 +41,7 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
 
         #[derive(OpenApi)]
-        #[openapi()]
+        #[openapi(paths(routes::fetch_boosted_properties), components(schemas(dto::property_summary::PropertySummary)))]
         struct ApiDoc;
         let openapi = ApiDoc::openapi();        
 
@@ -50,6 +50,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
+            .service(routes::fetch_boosted_properties)
             .wrap(cors)
     })
     .bind("0.0.0.0:12000")?

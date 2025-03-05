@@ -1,4 +1,10 @@
-use crate::dal::{repository::PropertiesRepository, sch_models::Property};
+use crate::dal::{
+    repository::PropertiesRepository,
+    sch_models::PropertyWithDetails,
+    schema::{
+        cities, disposition_types, locations::{self}, property_types, states
+    },
+};
 use diesel::prelude::*;
 use dotenvy::dotenv;
 use log::error;
@@ -33,20 +39,37 @@ impl PgProperties {
 }
 
 impl PropertiesRepository for PgProperties {
-    fn fetch_top_properties(&self) -> Vec<Property> {
-        use crate::dal::schema::properties::dsl::*;
+    fn fetch_top_properties(&self) -> Vec<PropertyWithDetails> {
+        use crate::dal::schema::properties::dsl::properties;
 
         let conn = &mut self.get_connection();
         let result = properties
             .limit(10)
-            .load::<Property>(conn);
+            .inner_join(locations::table
+                .inner_join(cities::table)
+                .inner_join(states::table),
+            )
+            .inner_join(property_types::table)
+            .inner_join(disposition_types::table)
+            .select((
+                properties::all_columns(),
+                locations::street,
+                locations::house_number,
+                locations::neighborhood,
+                locations::zip_code,
+                cities::name,
+                states::name,
+                property_types::type_,
+                disposition_types::disposition,
+            ))
+            .load::<PropertyWithDetails>(conn);
 
         match result {
             Ok(list_properties) => list_properties,
             Err(e) => {
                 error!("{}", e);
                 vec![]
-            },
+            }
         }
     }
 }
@@ -59,6 +82,7 @@ mod tests {
     fn test_fetch_top_properties() {
         let repo = PgProperties::_test();
         let result = repo.fetch_top_properties();
+        print!("{:?}", result);
         assert!(!result.is_empty());
     }
 }
