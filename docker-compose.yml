@@ -114,6 +114,15 @@ services:
       - "5436:5432"
     volumes:
       - users_data:/var/lib/postgresql/data
+  file_server:
+    build: 
+      context: .
+      dockerfile: file_server/Dockerfile
+    image: file_server:latest
+    ports:
+      - "12006:12000"
+    volumes:
+      - file_storage:/images
 volumes:
   users_data:
     driver: local
@@ -122,6 +131,8 @@ volumes:
   properties_data:
     driver: local
   payments_data:
+    driver: local
+  file_storage:
     driver: local
 
 
