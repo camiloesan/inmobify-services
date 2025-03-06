@@ -1,9 +1,8 @@
-CREATE TYPE operation_enum AS ENUM ('create', 'update', 'delete');
-
 CREATE TABLE operation_logs (
     id SERIAL PRIMARY KEY,
     "service" VARCHAR(36) NOT NULL, 
-    "operation" operation_enum NOT NULL DEFAULT 'create',
+    "operation" INTEGER REFERENCES operations(id) NOT NULL,
+    "table" VARCHAR(36) NOT NULL,
     element_id UUID NOT NULL,
     ip INET NOT NULL,
     "user" VARCHAR(128) NOT NULL,
