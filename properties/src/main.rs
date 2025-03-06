@@ -39,6 +39,8 @@ async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     run_migrations();
 
+    let pool = initialize_db_pool();  
+
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin()
@@ -49,8 +51,6 @@ async fn main() -> std::io::Result<()> {
         #[openapi(paths(routes::fetch_boosted_properties), components(schemas(dto::property_summary::PropertySummary)))]
         struct ApiDoc;
         let openapi = ApiDoc::openapi();
-
-        let pool = initialize_db_pool();    
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
