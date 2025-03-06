@@ -39,7 +39,7 @@ pub async fn fetch_boosted_properties(
                 .into_iter()
                 .map(|p| PropertySummary {
                     id: p.property.id.to_string(),
-                    image_path: "/assets/default.jpg".to_string(), //placeholder for path
+                    image_path: p.property.img_path,
                     title: p.property.title,
                     street: p.street,
                     house_number: p.house_number,

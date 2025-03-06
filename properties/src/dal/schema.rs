@@ -37,6 +37,8 @@ diesel::table! {
         id -> Uuid,
         #[max_length = 255]
         title -> Varchar,
+        #[max_length = 255]
+        img_path -> Varchar,
         #[max_length = 1024]
         description -> Nullable<Varchar>,
         n_rooms -> Int4,

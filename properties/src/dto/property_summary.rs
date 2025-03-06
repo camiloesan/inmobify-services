@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 pub struct PropertySummary {
     #[schema(example = "699f69e5-a2a4-4168-a535-b900a1c822be", required = true)]
     pub id: String,
-    #[schema(example = "/assets/img1.jpg", required = true)]
+    #[schema(example = "/images/img1.jpg", required = true)]
     pub image_path: String,
     #[schema(example = "Casa en renta renovada pet friendly", required = true)]
     pub title: String,

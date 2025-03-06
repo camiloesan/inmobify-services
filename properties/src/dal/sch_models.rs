@@ -10,6 +10,7 @@ use uuid::Uuid;
 pub struct Property {
     pub id: Uuid,
     pub title: String,
+    pub img_path: String,
     pub description: Option<String>,
     pub n_rooms: i32,
     pub n_bathrooms: i32,
