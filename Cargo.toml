@@ -8,6 +8,7 @@ members = [
     "payments",
     "appointments",
     "file_server",
+    "database_logger",
 ]
 
 [workspace.dependencies]

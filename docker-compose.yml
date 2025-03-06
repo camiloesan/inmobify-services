@@ -123,6 +123,30 @@ services:
       - "12006:12000"
     volumes:
       - file_storage:/images
+  database_logger:
+    build: 
+      context: .
+      dockerfile: database_logger/Dockerfile
+    image: database_logger:latest
+    ports:
+      - "12007:12000"
+    depends_on:
+      - database_logger_db
+  database_logger_db:
+    container_name: database_logger_db
+    image: postgres:latest
+    restart: always
+    env_file:
+      - database_logger/.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_logger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5437:5432"
+    volumes:
+      - database_logger_data:/var/lib/postgresql/data
 volumes:
   users_data:
     driver: local
@@ -133,6 +157,8 @@ volumes:
   payments_data:
     driver: local
   file_storage:
+    driver: local
+  database_logger_data:
     driver: local
 
 
