@@ -36,7 +36,7 @@ jobs:
         run: |
           cargo build -p users
 
-          cargo run --bin users &
+          cargo run -p users &
           PROJECT_PID=$!
           echo "Project running with PID: $PROJECT_PID"
 
