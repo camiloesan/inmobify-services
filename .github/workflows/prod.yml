@@ -32,6 +32,7 @@ jobs:
       - name: build and test
         env:
           DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5432/inmobify_users
+          LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5432/inmobify_users
         run: |
           cargo build -p users
 
