@@ -193,6 +193,7 @@ mod tests {
 
     #[test]
     fn test_update_user() {
+        // github actions test
         // set up
         let repo = PgUsers::_test();
         let user = crate::dto::new_user::NewUser {
