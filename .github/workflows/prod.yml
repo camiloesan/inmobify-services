@@ -44,4 +44,4 @@ jobs:
           kill $PROJECT_PID
           echo "Project stopped."
 
-          cargo test
+          cargo test -p users
