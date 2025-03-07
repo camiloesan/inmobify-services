@@ -1,0 +1,55 @@
+name: build and test
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      users_db:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: inmobify_user
+          POSTGRES_PASSWORD: 123456
+          POSTGRES_DB: inmobify_users
+        ports:
+          - 5432:5432
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+      # properties_db:
+      #   image: postgres:latest
+      #   env:
+      #     POSTGRES_PASSWORD: 123456
+      #     POSTGRES_DB: inmobify_properties
+      #   ports:
+      #     - 5433:5432
+      #   options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+
+      - name: build and test
+        env:
+          DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5432/inmobify_users
+        run: |
+          cargo build
+
+          cargo run --bin users &
+          PROJECT_PID=$!
+          echo "Project running with PID: $PROJECT_PID"
+
+          sleep 7
+
+          kill $PROJECT_PID
+          echo "Project stopped."
+
+          cargo test
