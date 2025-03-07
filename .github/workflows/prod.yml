@@ -17,15 +17,7 @@ jobs:
           POSTGRES_DB: inmobify_users
         ports:
           - 5432:5432
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-      # properties_db:
-      #   image: postgres:latest
-      #   env:
-      #     POSTGRES_PASSWORD: 123456
-      #     POSTGRES_DB: inmobify_properties
-      #   ports:
-      #     - 5433:5432
-      #   options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+        options: --health-cmd="pg_isready -U inmobify_user -d inmobify_users" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout code
