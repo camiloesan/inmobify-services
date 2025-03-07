@@ -33,7 +33,7 @@ jobs:
         env:
           DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5432/inmobify_users
         run: |
-          cargo build
+          cargo build -p users
 
           cargo run --bin users &
           PROJECT_PID=$!
