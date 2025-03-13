@@ -7,9 +7,10 @@ diesel::table! {
         service -> Varchar,
         operation -> Int4,
         #[max_length = 36]
-        table -> Varchar,
+        affected_table -> Varchar,
         element_id -> Uuid,
-        ip -> Inet,
+        #[max_length = 20]
+        ip -> Varchar,
         #[max_length = 128]
         user -> Varchar,
         date -> Timestamp,
