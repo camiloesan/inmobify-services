@@ -1,5 +1,6 @@
 use crate::dal::repository::UsersRepository;
 use crate::dal::sch_models::{NewUser, User};
+use crate::dto;
 use diesel::prelude::*;
 use dotenvy::dotenv;
 use log::error;
@@ -9,23 +10,13 @@ use uuid::Uuid;
 use super::sch_models::UpdateUser;
 
 #[derive(Clone)]
-pub struct PgUsers {
-    url: String,
-}
+pub struct PgUsers {}
 
 impl PgUsers {
-    pub fn new(url: String) -> Self {
-        Self { url }
-    }
-
-    pub fn _test() -> Self {
+    fn _tests_get_connection() -> PgConnection {
         dotenv().ok();
         let local_db_url = env::var("LOCAL_DB_URL").expect("LOCAL_DB_URL must be set");
-        Self { url: local_db_url }
-    }
-
-    fn get_connection(&self) -> PgConnection {
-        let conn = PgConnection::establish(&self.url);
+        let conn = PgConnection::establish(&local_db_url);
         match conn {
             Ok(result) => result,
             Err(e) => {
@@ -37,7 +28,7 @@ impl PgUsers {
 }
 
 impl UsersRepository for PgUsers {
-    fn create_user(&self, user: crate::dto::new_user::NewUser) -> Option<String> {
+    fn create_user(user: dto::new_user::NewUser, conn: &mut PgConnection) -> Option<String> {
         use crate::dal::schema::users;
 
         let uuid = Uuid::new_v4();
@@ -51,7 +42,6 @@ impl UsersRepository for PgUsers {
             user_type_id: user.user_type_id,
         };
 
-        let conn = &mut self.get_connection();
         let result = diesel::insert_into(users::table)
             .values(&new_user)
             .execute(conn);
@@ -65,15 +55,14 @@ impl UsersRepository for PgUsers {
         }
     }
 
-    fn get_user_by_uuid(&self, uuid: Uuid) -> Option<crate::dto::user::User> {
+    fn get_user_by_uuid(uuid: Uuid, conn: &mut PgConnection) -> Option<crate::dto::user::User> {
         use crate::dal::schema::users::dsl::*;
 
-        let conn = &mut self.get_connection();
         let result = users
-        .filter(id.eq(uuid))
-        .select(User::as_select())
-        .first::<User>(conn)
-        .optional();
+            .filter(id.eq(uuid))
+            .select(User::as_select())
+            .first::<User>(conn)
+            .optional();
 
         match result {
             Ok(Some(user)) => Some(crate::dto::user::User {
@@ -93,14 +82,16 @@ impl UsersRepository for PgUsers {
         }
     }
 
-    fn update_user_by_uuid(&self, uuid: Uuid, updated_user: UpdateUser) -> Option<crate::dto::user::User> {
+    fn update_user_by_uuid(
+        uuid: Uuid,
+        updated_user: UpdateUser,
+        conn: &mut PgConnection,
+    ) -> Option<crate::dto::user::User> {
         use crate::dal::schema::users::dsl::*;
 
-        let conn = &mut self.get_connection();
-
         let result = diesel::update(users.filter(id.eq(uuid)))
-        .set(updated_user)
-        .get_result::<User>(conn);
+            .set(updated_user)
+            .get_result::<User>(conn);
 
         match result {
             Ok(user) => Some(crate::dto::user::User {
@@ -119,10 +110,9 @@ impl UsersRepository for PgUsers {
         }
     }
 
-    fn delete_user_by_uuid(&self, uuid: Uuid) -> bool {
+    fn delete_user_by_uuid(uuid: Uuid, conn: &mut PgConnection) -> bool {
         use crate::dal::schema::users::dsl::*;
 
-        let conn = &mut self.get_connection();
         let result =
             conn.transaction(|conn| diesel::delete(users.filter(id.eq(uuid))).execute(conn));
 
@@ -143,7 +133,6 @@ mod tests {
     #[test]
     fn test_create_user() {
         // set up
-        let repo = PgUsers::_test();
         let user = crate::dto::new_user::NewUser {
             name: "Mariana".to_string(),
             last_name: "Gonzáles Pérez".to_string(),
@@ -154,19 +143,19 @@ mod tests {
         };
 
         // assertion
-        let result = repo.create_user(user.clone());
+        let mut conn = PgUsers::_tests_get_connection();
+        let result = PgUsers::create_user(user.clone(), &mut conn);
         assert!(result.is_some());
 
         // tear down
         let uuid = Uuid::parse_str(result.unwrap().as_str()).unwrap();
-        let delete_result = repo.delete_user_by_uuid(uuid);
+        let delete_result = PgUsers::delete_user_by_uuid(uuid, &mut conn);
         assert!(delete_result);
     }
 
     #[test]
     fn test_get_user() {
         // set up
-        let repo = PgUsers::_test();
         let user = crate::dto::new_user::NewUser {
             name: "Mariana".to_string(),
             last_name: "Gonzáles Pérez".to_string(),
@@ -177,17 +166,18 @@ mod tests {
         };
 
         // assertion 1
-        let result = repo.create_user(user.clone());
+        let mut conn = PgUsers::_tests_get_connection();
+        let result = PgUsers::create_user(user.clone(), &mut conn);
         assert!(result.is_some());
 
         // main assertion
         let uuid = Uuid::parse_str(result.unwrap().as_str()).unwrap();
-        let result = repo.get_user_by_uuid(uuid.clone());
+        let result = PgUsers::get_user_by_uuid(uuid.clone(), &mut conn);
         println!("{:?}", result);
         assert!(result.is_some());
 
         // tear down
-        let delete_result = repo.delete_user_by_uuid(uuid);
+        let delete_result = PgUsers::delete_user_by_uuid(uuid, &mut conn);
         assert!(delete_result);
     }
 
@@ -195,7 +185,6 @@ mod tests {
     fn test_update_user() {
         // github actions test
         // set up
-        let repo = PgUsers::_test();
         let user = crate::dto::new_user::NewUser {
             name: "Mariana".to_string(),
             last_name: "Gonzáles Pérez".to_string(),
@@ -206,7 +195,8 @@ mod tests {
         };
 
         // assertion 1
-        let result = repo.create_user(user.clone());
+        let mut conn = PgUsers::_tests_get_connection();
+        let result = PgUsers::create_user(user.clone(), &mut conn);
         assert!(result.is_some());
 
         let updated_user = UpdateUser {
@@ -221,13 +211,12 @@ mod tests {
 
         // main assertion
         let uuid = Uuid::parse_str(result.unwrap().as_str()).unwrap();
-        let result = repo.update_user_by_uuid(uuid.clone(), updated_user);
+        let result = PgUsers::update_user_by_uuid(uuid.clone(), updated_user, &mut conn);
         println!("{:?}", result);
         assert!(result.is_some());
 
         // tear down
-        let delete_result = repo.delete_user_by_uuid(uuid);
+        let delete_result = PgUsers::delete_user_by_uuid(uuid, &mut conn);
         assert!(delete_result);
     }
-
 }

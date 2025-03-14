@@ -7,7 +7,12 @@ edition = "2021"
 dotenvy = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
-diesel = { version = "2.2.0", features = ["postgres", "uuid", "chrono"] }
+diesel = { version = "2.2.0", features = [
+    "postgres",
+    "r2d2",
+    "uuid",
+    "chrono",
+] }
 diesel_migrations = "*"
 uuid = { version = "1.4", features = ["v4"] }
 chrono = "*"
