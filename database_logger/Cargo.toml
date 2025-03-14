@@ -5,10 +5,15 @@ edition = "2024"
 
 [dependencies]
 dotenvy = { workspace = true }
-uuid = { version = "1.4", features = ["v4"]}
+uuid = { version = "1.4", features = ["v4", "serde"] }
 serde = { version = "1.0", features = ["derive"] }
-diesel = { version = "2.2.0", features = ["postgres", "uuid", "chrono", "network-address", "ipnet-address"] }
-ip_network = "0.4.1"
+diesel = { version = "2.2.0", features = [
+    "postgres",
+    "uuid",
+    "chrono",
+    "network-address",
+] }
+ipnetwork = "0.20.0"
 diesel_migrations = "*"
 serde_json = "1.0"
 actix-web = "4.0"

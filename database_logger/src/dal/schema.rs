@@ -9,8 +9,7 @@ diesel::table! {
         #[max_length = 36]
         affected_table -> Varchar,
         element_id -> Uuid,
-        #[max_length = 20]
-        ip -> Varchar,
+        ip -> Inet,
         #[max_length = 128]
         user -> Varchar,
         date -> Timestamp,
