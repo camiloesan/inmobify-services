@@ -1,11 +1,10 @@
 mod dal;
-mod routes;
 mod dto;
+mod routes;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
-use dal::db_operations::PgUsers;
-use diesel::prelude::*;
+use diesel::{prelude::*, r2d2};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 use env_logger::Env;
@@ -14,8 +13,10 @@ use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
 
-fn do_migrations() {
+/// Run diesel migrations at compile-time
+fn run_migrations() {
     dotenv().ok();
     let url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut conn = PgConnection::establish(&url).expect("Failed to establish connection");
@@ -23,16 +24,21 @@ fn do_migrations() {
         .expect("Couldn't migrate tables");
 }
 
+/// Initialize database connection pool based on `DATABASE_URL` environment variable.
+fn initialize_db_pool() -> DbPool {
+    let conn_spec = std::env::var("DATABASE_URL").expect("DATABASE_URL should be set");
+    let manager = r2d2::ConnectionManager::<PgConnection>::new(conn_spec);
+    r2d2::Pool::builder()
+        .build(manager)
+        .expect("database URL should be valid path to postgresql server")
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+    run_migrations();
 
-    dotenv().ok();
-    let url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-
-    do_migrations();
-
-    let repo: PgUsers = PgUsers::new(url.clone());
+    let pool = initialize_db_pool();
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -50,10 +56,10 @@ async fn main() -> std::io::Result<()> {
             components(schemas(dto::user::User, dto::new_user::NewUser))
         )]
         struct ApiDoc;
-        let openapi = ApiDoc::openapi();        
+        let openapi = ApiDoc::openapi();
 
         App::new()
-            .app_data(web::Data::new(repo.clone()))
+            .app_data(web::Data::new(pool.clone()))
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )

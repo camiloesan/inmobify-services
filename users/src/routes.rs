@@ -1,6 +1,7 @@
 use crate::{
     dal::{db_operations::PgUsers, repository::UsersRepository},
     dto::new_user::NewUser,
+    DbPool,
 };
 use actix_web::{
     delete, get, post,
@@ -20,14 +21,19 @@ use validator::Validate;
     )
 )]
 #[post("/users")]
-pub async fn create_user(repo: web::Data<PgUsers>, data: web::Json<NewUser>) -> impl Responder {
+pub async fn create_user(pool: web::Data<DbPool>, data: web::Json<NewUser>) -> impl Responder {
     info!("request to create user received");
 
     if let Err(errors) = data.validate() {
         return HttpResponse::BadRequest().json(errors);
     }
-    
-    let result = web::block(move || repo.create_user(data.0.clone())).await;
+
+    let result = web::block(move || {
+        let mut conn = pool.get().expect("Failed to get connection from pool");
+        PgUsers::create_user(data.into_inner(), &mut conn)
+    })
+    .await;
+
     match result {
         Ok(Some(uuid)) => HttpResponse::Created().json(uuid),
         Ok(None) => HttpResponse::Conflict().finish(),
@@ -46,13 +52,18 @@ pub async fn create_user(repo: web::Data<PgUsers>, data: web::Json<NewUser>) -> 
     )
 )]
 #[get("/users/{id}")]
-pub async fn get_user_by_uuid(repo: web::Data<PgUsers>, path: web::Path<String>) -> impl Responder {
+pub async fn get_user_by_uuid(pool: web::Data<DbPool>, path: web::Path<String>) -> impl Responder {
     info!("request to get user received");
 
     let user_id = path.into_inner();
     let parsed_uuid = uuid::Uuid::parse_str(&user_id).expect("bad format uuid");
 
-    let result = web::block(move || repo.get_user_by_uuid(parsed_uuid)).await;
+    let result = web::block(move || {
+        let mut conn = pool.get().expect("failed to get connection");
+        PgUsers::get_user_by_uuid(parsed_uuid, &mut conn)
+    })
+    .await;
+
     match result {
         Ok(Some(uuid)) => HttpResponse::Ok().json(uuid),
         Ok(None) => HttpResponse::Conflict().finish(),
@@ -72,7 +83,7 @@ pub async fn get_user_by_uuid(repo: web::Data<PgUsers>, path: web::Path<String>)
 )]
 #[delete("/users/{id}")]
 pub async fn delete_user_by_uuid(
-    repo: web::Data<PgUsers>,
+    repo: web::Data<DbPool>,
     path: web::Path<String>,
 ) -> impl Responder {
     info!("request to delete a user received");
@@ -80,7 +91,12 @@ pub async fn delete_user_by_uuid(
     let user_id = path.into_inner();
     let parsed_uuid = uuid::Uuid::parse_str(&user_id).expect("bad format uuid");
 
-    let result = web::block(move || repo.delete_user_by_uuid(parsed_uuid)).await;
+    let result = web::block(move || {
+        let mut conn = repo.get().expect("failed to get connection");
+        PgUsers::delete_user_by_uuid(parsed_uuid, &mut conn)
+    })
+    .await;
+
     match result {
         Ok(is_deleted) => {
             if is_deleted {
