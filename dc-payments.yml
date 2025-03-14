@@ -1,0 +1,30 @@
+services:
+  payments:
+    build:
+      context: .
+      dockerfile: payments/Dockerfile
+    env_file:
+      - payments/.env
+    image: payments:latest
+    ports:
+      - "12003:12000"
+    depends_on:
+      - payments_db
+  payments_db:
+    container_name: payments_db
+    image: postgres:latest
+    restart: always
+    env_file:
+      - payments/.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_payments"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5434:5432"
+    volumes:
+      - payments_data:/var/lib/postgresql/data
+volumes:
+  payments_data:
+    driver: local

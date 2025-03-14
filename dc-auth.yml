@@ -1,0 +1,10 @@
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: auth/Dockerfile
+    env_file:
+      - auth/.env
+    image: auth:latest
+    ports:
+      - "12002:12000"

@@ -1,0 +1,13 @@
+services:
+  file_server:
+    build: 
+      context: .
+      dockerfile: file_server/Dockerfile
+    image: file_server:latest
+    ports:
+      - "12006:12000"
+    volumes:
+      - file_storage:/images
+volumes:
+  file_storage:
+    driver: local
