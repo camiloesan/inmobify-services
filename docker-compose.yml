@@ -94,6 +94,7 @@ services:
       dockerfile: users/Dockerfile
     env_file:
       - users/.env
+      - auth/.env
     image: users:latest
     ports:
       - "12005:12000"

@@ -88,6 +88,15 @@ async fn proxy_appointments(
     proxy_to_service(client, path, req, body, 12001).await
 }
 
+async fn proxy_auth(
+    client: web::Data<Client>,
+    path: web::Path<String>,
+    req: HttpRequest,
+    body: web::Bytes,
+) -> Result<impl Responder, Error> {
+    proxy_to_service(client, path, req, body, 12002).await
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let client = Client::new(); // HTTP client for proxying requests
@@ -103,6 +112,7 @@ async fn main() -> std::io::Result<()> {
                 "/imf-appointments/{path:.*}",
                 web::route().to(proxy_appointments),
             )
+            .route("/auth/{path:.*}", web::route().to(proxy_auth))
     })
     .bind("0.0.0.0:12000")?
     .run()

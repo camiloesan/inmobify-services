@@ -8,3 +8,5 @@ services:
     image: auth:latest
     ports:
       - "12002:12000"
+    depends_on:
+      - users_db
