@@ -11,6 +11,8 @@ use env_logger::Env;
 use std::env;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
+use actix_web_httpauth::middleware::HttpAuthentication;
+use jwt::validate_jwt;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
@@ -60,12 +62,16 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .wrap(cors)
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
             .service(routes::create_user)
-            .service(routes::get_user_by_uuid)
-            .wrap(cors)
+            .service(
+                web::scope("")
+                    .wrap(HttpAuthentication::bearer(validate_jwt))
+                    .service(routes::get_user_by_uuid)
+            )
     })
     .bind("0.0.0.0:12000")?
     .run()
