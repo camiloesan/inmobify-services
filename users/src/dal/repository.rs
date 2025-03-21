@@ -8,7 +8,7 @@ use super::sch_models::UpdateUser;
 
 pub trait UsersRepository {
     fn create_user(user: NewUser, conn: &mut PgConnection) -> Option<String>;
-    fn get_user_by_uuid(uuid: Uuid, conn: &mut PgConnection) -> Option<User>;
+    fn fetch_user_by_uuid(uuid: Uuid, conn: &mut PgConnection) -> Option<User>;
     fn update_user_by_uuid(
         uuid: Uuid,
         updated_user: UpdateUser,

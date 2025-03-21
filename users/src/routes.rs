@@ -56,19 +56,19 @@ pub async fn get_user_by_uuid(pool: web::Data<DbPool>, path: web::Path<String>) 
     info!("request to get user received");
 
     let user_id = path.into_inner();
-    let parsed_uuid = uuid::Uuid::parse_str(&user_id).expect("bad format uuid");
+    let parsed_uuid = uuid::Uuid::parse_str(&user_id).expect("Uuid format not valid");
 
     let result = web::block(move || {
         let mut conn = pool.get().expect("failed to get connection");
-        PgUsers::get_user_by_uuid(parsed_uuid, &mut conn)
+        PgUsers::fetch_user_by_uuid(parsed_uuid, &mut conn)
     })
     .await;
 
     match result {
-        Ok(Some(uuid)) => HttpResponse::Ok().json(uuid),
+        Ok(Some(user_dto)) => HttpResponse::Ok().json(user_dto),
         Ok(None) => HttpResponse::Conflict().finish(),
         Err(e) => {
-            error!("{}", e);
+            error!("Couldn't fetch user: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
