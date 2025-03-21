@@ -55,7 +55,7 @@ impl UsersRepository for PgUsers {
         }
     }
 
-    fn get_user_by_uuid(uuid: Uuid, conn: &mut PgConnection) -> Option<crate::dto::user::User> {
+    fn fetch_user_by_uuid(uuid: Uuid, conn: &mut PgConnection) -> Option<crate::dto::user::User> {
         use crate::dal::schema::users::dsl::*;
 
         let result = users
@@ -76,7 +76,7 @@ impl UsersRepository for PgUsers {
             }),
             Ok(None) => None,
             Err(e) => {
-                error!("{}", e);
+                error!("Couldn't fetch user from database: {}", e);
                 None
             }
         }
@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_user() {
+    fn test_fetch_user() {
         // set up
         let user = crate::dto::new_user::NewUser {
             name: "Mariana".to_string(),
@@ -165,14 +165,14 @@ mod tests {
             user_type_id: 1,
         };
 
-        // assertion 1
+        // create assertion
         let mut conn = PgUsers::_tests_get_connection();
         let result = PgUsers::create_user(user.clone(), &mut conn);
         assert!(result.is_some());
 
         // main assertion
         let uuid = Uuid::parse_str(result.unwrap().as_str()).unwrap();
-        let result = PgUsers::get_user_by_uuid(uuid.clone(), &mut conn);
+        let result = PgUsers::fetch_user_by_uuid(uuid.clone(), &mut conn);
         println!("{:?}", result);
         assert!(result.is_some());
 
