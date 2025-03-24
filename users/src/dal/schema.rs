@@ -20,7 +20,7 @@ diesel::table! {
         email -> Varchar,
         #[max_length = 10]
         phone -> Varchar,
-        #[max_length = 36]
+        #[max_length = 64]
         password -> Varchar,
         created_at -> Timestamp,
         user_type_id -> Int4,
