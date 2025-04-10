@@ -1,6 +1,6 @@
 mod dal;
-mod routes;
 mod dto;
+mod routes;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
@@ -33,13 +33,12 @@ fn initialize_db_pool() -> DbPool {
         .expect("database URL should be valid path to postgresql server")
 }
 
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     run_migrations();
 
-    let pool = initialize_db_pool();  
+    let pool = initialize_db_pool();
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -48,7 +47,10 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
 
         #[derive(OpenApi)]
-        #[openapi(paths(routes::fetch_boosted_properties), components(schemas(dto::property_summary::PropertySummary)))]
+        #[openapi(
+            paths(routes::fetch_boosted_properties),
+            components(schemas(dto::property_summary::PropertySummary))
+        )]
         struct ApiDoc;
         let openapi = ApiDoc::openapi();
 
@@ -58,6 +60,7 @@ async fn main() -> std::io::Result<()> {
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
             .service(routes::fetch_boosted_properties)
+            .service(routes::fetch_property_details)
             .wrap(cors)
     })
     .bind("0.0.0.0:12000")?
