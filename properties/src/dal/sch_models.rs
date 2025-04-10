@@ -1,4 +1,4 @@
-use crate::dal::schema::{properties, locations};
+use crate::dal::schema::{locations, properties};
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
