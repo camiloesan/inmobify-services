@@ -1,17 +1,10 @@
-<<<<<<< HEAD
 use actix_cors::Cors;
-use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, Responder, http::Method, web};
-use reqwest::{Client, RequestBuilder};
-use serde_json::Value;
-=======
-use actix_web::{
-    App, Error, HttpRequest, HttpResponse, HttpServer, Responder, http::Method as ActixMethod, web,
-};
+use actix_web::http::Method as ActixMethod;
+use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, Responder, web};
 use reqwest::{
     Client, Method as ReqwestMethod, header::HeaderMap as ReqwestHeaderMap, header::HeaderName,
     header::HeaderValue,
 };
->>>>>>> 877e630357016ba8099fe9589fbff8b3bc4aefae
 
 async fn health_check() -> impl Responder {
     HttpResponse::Ok().body("API Gateway is running!")
@@ -134,10 +127,7 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
         App::new()
             .app_data(web::Data::new(client.clone()))
-<<<<<<< HEAD
-            .wrap(cors)// Share the HTTP client across requests
-=======
->>>>>>> 877e630357016ba8099fe9589fbff8b3bc4aefae
+            .wrap(cors) // Share the HTTP client across requests
             .route("/health", web::get().to(health_check))
             .route(
                 "/imf-properties/{path:.*}",
