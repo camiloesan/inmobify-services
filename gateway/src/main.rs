@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::{App, Error, HttpRequest, HttpResponse, HttpServer, Responder, http::Method, web};
 use reqwest::{Client, RequestBuilder};
 use serde_json::Value;
@@ -102,8 +103,13 @@ async fn main() -> std::io::Result<()> {
     let client = Client::new(); // HTTP client for proxying requests
 
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allow_any_header();
         App::new()
-            .app_data(web::Data::new(client.clone())) // Share the HTTP client across requests
+            .app_data(web::Data::new(client.clone()))
+            .wrap(cors)// Share the HTTP client across requests
             .route("/health", web::get().to(health_check))
             .route("/imf-properties/{path:.*}", web::route().to(proxy_properties))
             .route("/imf-users/{path:.*}", web::route().to(proxy_users))
