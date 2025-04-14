@@ -19,6 +19,7 @@ impl AuthRepository for PgAuth {
 
         user.map(|user| {
             let response = LoginResponse {
+                id: user.id.to_string(),
                 email: user.email,
                 user_type_id: user.user_type_id,
                 name: user.name,
