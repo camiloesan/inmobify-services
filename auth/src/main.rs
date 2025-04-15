@@ -32,12 +32,13 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::default()
             .allow_any_origin()
             .allow_any_method()
-            .allow_any_header();
+            .allow_any_header()
+            .expose_headers(vec!["x-token"]);
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
-            .service(routes::login)
             .wrap(cors)
+            .service(routes::login)
     })
     .bind("0.0.0.0:12000")?
     .run()
