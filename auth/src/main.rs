@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .service(routes::login)
     })
-    .bind("0.0.0.0:12000")?
+    .bind("0.0.0.0:12002")?
     .run()
     .await
 }

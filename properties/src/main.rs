@@ -61,9 +61,12 @@ async fn main() -> std::io::Result<()> {
             )
             .service(routes::fetch_boosted_properties)
             .service(routes::fetch_property_details)
+            .service(routes::create_property)
+            .service(routes::update_img_path)
+            .service(routes::get_states)
             .wrap(cors)
     })
-    .bind("0.0.0.0:12000")?
+    .bind("0.0.0.0:12004")?
     .run()
     .await
 }

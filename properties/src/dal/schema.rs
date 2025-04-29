@@ -27,7 +27,12 @@ diesel::table! {
         neighborhood -> Varchar,
         #[max_length = 5]
         zip_code -> Varchar,
-        city_id -> Int4,
+        #[max_length = 255]
+        latitude -> Varchar,
+        #[max_length = 255]
+        longitude -> Varchar,
+        #[max_length = 255]
+        city_name -> Varchar,
         state_id -> Int4,
     }
 }
@@ -88,7 +93,6 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(locations -> cities (city_id));
 diesel::joinable!(locations -> states (state_id));
 diesel::joinable!(properties -> disposition_types (disposition_type_id));
 diesel::joinable!(properties -> locations (location_id));

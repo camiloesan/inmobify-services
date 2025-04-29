@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
+use crate::dto::new_property::NewProperty;
 use crate::dto::property_detail::PropertyDetail;
+use crate::dto::update_image_path::UpdateImagePath;
 use crate::DbPool;
 use crate::{
     dal::{db_operations::PgProperties, repository::PropertiesRepository},
@@ -11,7 +13,9 @@ use actix_web::{
     web::{self},
     HttpResponse, Responder,
 };
+use actix_web::{post, put};
 use log::{error, info};
+use uuid::Uuid;
 
 /// Get a list of boosted properties.
 #[utoipa::path(
@@ -63,6 +67,59 @@ pub async fn fetch_boosted_properties(pool: web::Data<DbPool>) -> impl Responder
         }
         Err(e) => {
             error!("{}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Create a new property.
+#[post("/property")]
+pub async fn create_property(
+    pool: web::Data<DbPool>,
+    new_property: web::Json<NewProperty>,
+) -> impl Responder {
+    info!("request to create property received");
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+
+        let location = crate::dal::sch_models::NewLocation {
+            street: &new_property.street,
+            house_number: &new_property.house_number,
+            neighborhood: &new_property.neighborhood,
+            zip_code: &new_property.zip_code,
+            latitude: &new_property.latitude,
+            longitude: &new_property.longitude,
+            city_name: &new_property.city_name,
+            state_id: new_property.state_id,
+        };
+        let location_id = PgProperties::create_location(&mut conn, location).unwrap();
+
+        let property = crate::dal::sch_models::NewProperty {
+            id: Uuid::new_v4(),
+            title: &new_property.title,
+            img_path: &new_property.image_path,
+            description: Some(&new_property.description),
+            n_rooms: new_property.n_rooms,
+            n_bathrooms: new_property.n_bathrooms,
+            sqm: new_property.sqm,
+            priority: new_property.priority,
+            price: new_property.price,
+            owner_id: Uuid::from_str(&new_property.owner_id).unwrap(),
+            location_id,
+            property_type_id: new_property.property_type_id,
+            disposition_type_id: new_property.disposition_type_id,
+        };
+        let property_uuid = PgProperties::create_property(&mut conn, property).unwrap();
+
+        property_uuid
+    })
+    .await;
+
+    match result {
+        Ok(property_uuid) => HttpResponse::Ok().json(property_uuid.to_string()),
+        Err(err) => {
+            error!("Failed to create property: {}", err);
             HttpResponse::InternalServerError().finish()
         }
     }
@@ -123,5 +180,55 @@ pub async fn fetch_property_details(
             error!("Failed to get property details: {}", e);
             HttpResponse::InternalServerError().finish()
         }
+    }
+}
+
+/// Update the image path of a property
+#[put("/property-img-path/{id}")]
+pub async fn update_img_path(
+    pool: web::Data<DbPool>,
+    id: web::Path<String>,
+    img_path: web::Json<UpdateImagePath>,
+) -> HttpResponse {
+    info!("Updating image path for property with ID: {}", id);
+
+    let id = id.into_inner();
+    let img_path = img_path.into_inner();
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        PgProperties::update_image_path(&mut conn, Uuid::from_str(&id).unwrap(), img_path.img_path)
+            .unwrap();
+    })
+    .await;
+
+    match result {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(_) => HttpResponse::InternalServerError().finish(),
+    }
+}
+
+#[get("/states")]
+pub async fn get_states(pool: web::Data<DbPool>) -> HttpResponse {
+    info!("Getting states");
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        PgProperties::get_states(&mut conn).unwrap()
+    })
+    .await;
+
+    match result {
+        Ok(states) => {
+            let dto = states
+                .into_iter()
+                .map(|state| crate::dto::state::State {
+                    id: state.id,
+                    name: state.name,
+                })
+                .collect::<Vec<_>>();
+            HttpResponse::Ok().json(dto)
+        }
+        Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }

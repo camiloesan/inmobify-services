@@ -4,15 +4,15 @@ mod routes;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use diesel::{prelude::*, r2d2};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 use env_logger::Env;
+use jwt::validate_jwt;
 use std::env;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-use actix_web_httpauth::middleware::HttpAuthentication;
-use jwt::validate_jwt;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
@@ -70,10 +70,10 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("")
                     .wrap(HttpAuthentication::bearer(validate_jwt))
-                    .service(routes::get_user_by_uuid)
+                    .service(routes::get_user_by_uuid),
             )
     })
-    .bind("0.0.0.0:12000")?
+    .bind("0.0.0.0:12005")?
     .run()
     .await
 }
