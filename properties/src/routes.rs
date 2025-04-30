@@ -169,6 +169,8 @@ pub async fn fetch_property_details(
                 zip_code: property_details.zip_code,
                 city: property_details.city_name,
                 state: property_details.state_name,
+                latitude: property_details.latitude,
+                longitude: property_details.longitude,
                 property_type: property_details.property_type,
                 disposition: property_details.disposition,
             };
