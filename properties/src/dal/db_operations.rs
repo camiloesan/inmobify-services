@@ -49,6 +49,8 @@ impl PropertiesRepository for PgProperties {
                 locations::zip_code,
                 locations::city_name,
                 states::name,
+                locations::latitude,
+                locations::longitude,
                 property_types::type_,
                 disposition_types::disposition,
             ))
@@ -79,6 +81,8 @@ impl PropertiesRepository for PgProperties {
                 locations::zip_code,
                 locations::city_name,
                 states::name,
+                locations::latitude,
+                locations::longitude,
                 property_types::type_,
                 disposition_types::disposition,
             ))

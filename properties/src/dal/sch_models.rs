@@ -85,6 +85,8 @@ pub struct PropertyWithDetails {
     pub zip_code: String,
     pub city_name: String,
     pub state_name: String,
+    pub latitude: String,
+    pub longitude: String,
     pub property_type: String,
     pub disposition: String,
 }
