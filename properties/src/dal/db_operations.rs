@@ -1,10 +1,11 @@
 use crate::dal::{
     repository::PropertiesRepository,
-    sch_models::PropertyWithDetails,
+    sch_models::{PropertyPreview, PropertyWithDetails},
     schema::{
         disposition_types,
         locations::{self},
-        properties, property_types, states,
+        properties::{self, created_at},
+        property_types, states,
     },
 };
 use diesel::prelude::*;
@@ -159,6 +160,32 @@ impl PropertiesRepository for PgProperties {
 
         Ok(result)
     }
+
+    fn get_top_5_properties_by_user_id(
+        conn: &mut PgConnection,
+        user_id: uuid::Uuid,
+    ) -> Result<Vec<super::sch_models::PropertyPreview>, diesel::result::Error> {
+        use crate::dal::schema::properties::dsl::properties as properties_schema;
+
+        let result = properties_schema
+            .inner_join(locations::table.inner_join(states::table))
+            .select((
+                properties::id,
+                properties::title,
+                locations::street,
+                locations::house_number,
+                locations::neighborhood,
+                locations::zip_code,
+                locations::city_name,
+                states::name,
+            ))
+            .filter(properties::owner_id.eq(user_id))
+            .order(created_at.desc())
+            .limit(5)
+            .load::<PropertyPreview>(conn)?;
+
+        Ok(result)
+    }
 }
 
 #[cfg(test)]
@@ -166,6 +193,17 @@ mod tests {
     use super::*;
     use std::str::FromStr;
     use uuid::Uuid;
+
+    #[test]
+    fn test_get_top_5_properties_by_user_id() {
+        let mut conn = PgProperties::_tests_get_connection();
+        let user_id = Uuid::from_str("6ba7b810-9dad-11d1-80b4-00c04fd430c8").unwrap();
+        let result = PgProperties::get_top_5_properties_by_user_id(&mut conn, user_id).unwrap();
+
+        println!("{:?}", result);
+
+        assert!(!result.is_empty());
+    }
 
     #[test]
     fn test_fetch_states() {

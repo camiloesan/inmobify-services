@@ -234,3 +234,44 @@ pub async fn get_states(pool: web::Data<DbPool>) -> HttpResponse {
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }
+
+#[get("/user-properties-preview/{id}")]
+pub async fn get_user_properties(
+    pool: web::Data<DbPool>,
+    user_id: web::Path<String>,
+) -> HttpResponse {
+    info!("Getting user properties");
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        PgProperties::get_top_5_properties_by_user_id(&mut conn, Uuid::from_str(&user_id).unwrap())
+            .unwrap()
+    })
+    .await;
+
+    match result {
+        Ok(properties) => {
+            let dto = properties
+                .into_iter()
+                .map(|property| crate::dto::property_preview::PropertyPreview {
+                    id: property.id.to_string(),
+                    title: property.title,
+                    location: format!(
+                        "{} {} {} {} {} {}",
+                        property.street,
+                        property.house_number,
+                        property.neighborhood,
+                        property.city_name,
+                        property.state_name,
+                        property.zip_code,
+                    ),
+                })
+                .collect::<Vec<_>>();
+            HttpResponse::Ok().json(dto)
+        }
+        Err(e) => {
+            error!("Error getting user properties: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}

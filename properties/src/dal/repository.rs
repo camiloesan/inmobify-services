@@ -1,6 +1,6 @@
 use diesel::PgConnection;
 
-use super::sch_models::{NewLocation, NewProperty, PropertyWithDetails, State};
+use super::sch_models::{NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State};
 
 pub trait PropertiesRepository {
     fn fetch_top_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails>;
@@ -30,4 +30,8 @@ pub trait PropertiesRepository {
         image_path: String,
     ) -> Result<i32, diesel::result::Error>;
     fn get_states(conn: &mut PgConnection) -> Result<Vec<State>, diesel::result::Error>;
+    fn get_top_5_properties_by_user_id(
+        conn: &mut PgConnection,
+        user_id: uuid::Uuid,
+    ) -> Result<Vec<PropertyPreview>, diesel::result::Error>;
 }
