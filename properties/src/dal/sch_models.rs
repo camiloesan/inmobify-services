@@ -24,6 +24,18 @@ pub struct Property {
     pub disposition_type_id: i32,
 }
 
+#[derive(Queryable, Debug)]
+pub struct PropertyPreview {
+    pub id: Uuid,
+    pub title: String,
+    pub street: String,
+    pub house_number: String,
+    pub neighborhood: String,
+    pub zip_code: String,
+    pub city_name: String,
+    pub state_name: String,
+}
+
 #[derive(Insertable, Debug)]
 #[diesel(table_name = properties)]
 pub struct NewProperty<'a> {
