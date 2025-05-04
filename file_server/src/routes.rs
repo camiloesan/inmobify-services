@@ -14,7 +14,7 @@ async fn upload(
     log::info!("request to upload file received");
 
     let property_uuid = path.into_inner();
-    let upload_dir = format!("images/{}", sanitize_filename(&property_uuid));
+    let upload_dir = format!("../images/{}", sanitize_filename(&property_uuid));
     fs::create_dir_all(&upload_dir)?;
 
     while let Some(item) = payload.next().await {
@@ -50,11 +50,11 @@ async fn delete_file(
 
     let basedir = id.into_inner();
 
-    let file_path = format!("images/{}/{}", basedir, data.filename);
+    let file_path = format!("../images/{}/{}", basedir, data.filename);
     fs::remove_file(file_path)?;
 
     // if directory is empty, delete it
-    let dir_path = format!("images/{}", basedir);
+    let dir_path = format!("../images/{}", basedir);
     if fs::read_dir(&dir_path)?.next().is_none() {
         fs::remove_dir(dir_path)?;
     }
@@ -68,7 +68,7 @@ async fn delete_directory(id: web::Path<String>) -> Result<HttpResponse, actix_w
 
     let basedir = id.into_inner();
 
-    let dir_path = format!("images/{}", basedir);
+    let dir_path = format!("../images/{}", basedir);
     fs::remove_dir_all(dir_path)?;
 
     Ok(HttpResponse::Ok().finish())
