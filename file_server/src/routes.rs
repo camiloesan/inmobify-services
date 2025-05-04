@@ -11,6 +11,8 @@ async fn upload(
     path: web::Path<String>,
     mut payload: Multipart,
 ) -> Result<HttpResponse, actix_web::Error> {
+    log::info!("request to upload file received");
+
     let property_uuid = path.into_inner();
     let upload_dir = format!("images/{}", sanitize_filename(&property_uuid));
     fs::create_dir_all(&upload_dir)?;
@@ -44,6 +46,8 @@ async fn delete_file(
     id: web::Path<String>,
     data: web::Json<DeleteFilePayload>,
 ) -> Result<HttpResponse, actix_web::Error> {
+    log::info!("request to delete file received");
+
     let basedir = id.into_inner();
 
     let file_path = format!("images/{}/{}", basedir, data.filename);
@@ -60,6 +64,8 @@ async fn delete_file(
 
 #[actix_web::delete("/directory/{id}")]
 async fn delete_directory(id: web::Path<String>) -> Result<HttpResponse, actix_web::Error> {
+    log::info!("request to delete directory received");
+
     let basedir = id.into_inner();
 
     let dir_path = format!("images/{}", basedir);

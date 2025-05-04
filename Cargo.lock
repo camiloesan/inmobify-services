@@ -959,7 +959,9 @@ dependencies = [
  "actix-files",
  "actix-multipart",
  "actix-web",
+ "env_logger",
  "futures",
+ "log",
  "serde",
  "tokio",
 ]
@@ -1099,6 +1101,8 @@ version = "0.1.0"
 dependencies = [
  "actix-cors",
  "actix-web",
+ "env_logger",
+ "log",
  "reqwest",
  "serde",
  "serde_json",

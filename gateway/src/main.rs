@@ -17,6 +17,8 @@ async fn proxy_to_service(
     body: web::Bytes,
     service_port: u16,
 ) -> Result<HttpResponse, Error> {
+    log::info!("Proxying request to service at port {}", service_port);
+
     let service_url = format!("http://localhost:{}/{}", service_port, path.into_inner());
     let method = req.method().clone();
 
@@ -70,7 +72,6 @@ async fn proxy_to_service(
     }
 }
 
-// Handlers for each service
 async fn proxy_properties(
     client: web::Data<Client>,
     path: web::Path<String>,
@@ -116,10 +117,20 @@ async fn proxy_auth(
     proxy_to_service(client, path, req, body, 12002).await
 }
 
+async fn proxy_files(
+    client: web::Data<Client>,
+    path: web::Path<String>,
+    req: HttpRequest,
+    body: web::Bytes,
+) -> Result<impl Responder, Error> {
+    proxy_to_service(client, path, req, body, 12006).await
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let client = Client::new();
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
+    let client = Client::new();
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin()
@@ -127,7 +138,7 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
         App::new()
             .app_data(web::Data::new(client.clone()))
-            .wrap(cors) // Share the HTTP client across requests
+            .wrap(cors)
             .route("/health", web::get().to(health_check))
             .route(
                 "/imf-properties/{path:.*}",
@@ -140,6 +151,7 @@ async fn main() -> std::io::Result<()> {
                 web::route().to(proxy_appointments),
             )
             .route("/imf-auth/{path:.*}", web::route().to(proxy_auth))
+            .route("/imf-files/{path:.*}", web::route().to(proxy_files))
     })
     .bind("0.0.0.0:12000")?
     .run()
