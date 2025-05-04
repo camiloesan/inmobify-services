@@ -1,7 +1,9 @@
-use actix_web::App;
 use actix_cors::Cors;
+use actix_files::Files;
+use actix_web::App;
 use actix_web::HttpServer;
-use actix_files as fs;
+
+mod routes;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -10,9 +12,11 @@ async fn main() -> std::io::Result<()> {
             .allow_any_origin()
             .allow_any_method()
             .allow_any_header();
-
         App::new()
-            .service(fs::Files::new("/images", "/images"))
+            .service(routes::upload)
+            .service(routes::delete_file)
+            .service(routes::delete_directory)
+            .service(Files::new("/images", "images").show_files_listing())
             .wrap(cors)
     })
     .bind("0.0.0.0:12000")?
