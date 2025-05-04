@@ -8,12 +8,12 @@ use crate::{
     dal::{db_operations::PgProperties, repository::PropertiesRepository},
     dto::property_summary::PropertySummary,
 };
+use actix_web::{delete, post, put};
 use actix_web::{
     get,
     web::{self},
     HttpResponse, Responder,
 };
-use actix_web::{post, put};
 use log::{error, info};
 use uuid::Uuid;
 
@@ -210,6 +210,7 @@ pub async fn update_img_path(
     }
 }
 
+/// Get all states
 #[get("/states")]
 pub async fn get_states(pool: web::Data<DbPool>) -> HttpResponse {
     info!("Getting states");
@@ -271,6 +272,57 @@ pub async fn get_user_properties(
         }
         Err(e) => {
             error!("Error getting user properties: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Deletes a property by ID.
+#[utoipa::path(
+    delete,
+    path = "/property/{id}",
+    responses(
+        (status = 200, description = "Property deleted successfully"),
+        (status = 404, description = "Property not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+#[delete("/property/{id}")]
+pub async fn delete_property(pool: web::Data<DbPool>, id: web::Path<String>) -> HttpResponse {
+    info!("Deleting property with ID: {}", id);
+
+    let result = web::block(move || -> bool {
+        let mut result = true;
+
+        let mut conn = pool.get().unwrap();
+
+        let location_id =
+            PgProperties::get_location_id_by_property_uuid(&mut conn, Uuid::from_str(&id).unwrap())
+                .unwrap();
+
+        let property_deletion_result =
+            PgProperties::delete_property_by_uuid(&mut conn, Uuid::from_str(&id).unwrap());
+
+        if property_deletion_result.unwrap() > 0 {
+            PgProperties::delete_location_by_id(&mut conn, location_id).unwrap();
+        } else {
+            result = false;
+        }
+
+        result
+    })
+    .await;
+
+    match result {
+        Ok(exists) => {
+            if exists {
+                HttpResponse::Ok().finish()
+            } else {
+                HttpResponse::NotFound().finish()
+            }
+        }
+        Err(e) => {
+            error!("Error deleting property: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
