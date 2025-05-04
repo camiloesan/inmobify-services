@@ -2,9 +2,9 @@ use crate::dal::{
     repository::PropertiesRepository,
     sch_models::PropertyWithDetails,
     schema::{
-        disposition_types,
-        locations::{self},
-        properties, property_types, states,
+        disposition_types, locations,
+        properties::{self},
+        property_types, states,
     },
 };
 use diesel::prelude::*;
@@ -109,7 +109,7 @@ impl PropertiesRepository for PgProperties {
         Ok(property.id)
     }
 
-    fn _delete_property(
+    fn delete_property_by_uuid(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
     ) -> Result<i32, diesel::result::Error> {
@@ -130,7 +130,7 @@ impl PropertiesRepository for PgProperties {
         Ok(location.id)
     }
 
-    fn _delete_location(
+    fn delete_location_by_id(
         conn: &mut PgConnection,
         location_id: i32,
     ) -> Result<i32, diesel::result::Error> {
@@ -159,6 +159,18 @@ impl PropertiesRepository for PgProperties {
 
         Ok(result)
     }
+
+    fn get_location_id_by_property_uuid(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+    ) -> Result<i32, diesel::result::Error> {
+        let result = properties::table
+            .filter(properties::id.eq(property_id))
+            .select(properties::location_id)
+            .first::<i32>(conn)?;
+
+        Ok(result)
+    }
 }
 
 #[cfg(test)]
@@ -166,6 +178,17 @@ mod tests {
     use super::*;
     use std::str::FromStr;
     use uuid::Uuid;
+
+    #[test]
+    fn get_location_id_by_property_uuid() {
+        let mut conn = PgProperties::_tests_get_connection();
+        let property_id = Uuid::from_str("d4a52262-48ee-4119-b9de-dfd80246a0d6").unwrap();
+        let result =
+            PgProperties::get_location_id_by_property_uuid(&mut conn, property_id).unwrap();
+        println!("{}", result);
+
+        assert!(result != 0)
+    }
 
     #[test]
     fn test_fetch_states() {
@@ -226,10 +249,10 @@ mod tests {
             PgProperties::update_image_path(&mut conn, property_id, image_path.to_string());
         assert!(result.is_ok());
 
-        let result = PgProperties::_delete_property(&mut conn, property_id);
+        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
         assert!(result.is_ok());
 
-        let result = PgProperties::_delete_location(&mut conn, location_id);
+        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
         assert!(result.is_ok());
     }
 
@@ -267,7 +290,7 @@ mod tests {
         println!("Location ID = {}", location_id);
         assert!(location_id > 0);
 
-        let result = PgProperties::_delete_location(&mut conn, location_id);
+        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
         assert!(result.is_ok());
     }
 
@@ -308,10 +331,10 @@ mod tests {
         let property_id = result.unwrap();
         println!("Property ID = {}", property_id);
 
-        let result = PgProperties::_delete_property(&mut conn, property_id);
+        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
         assert!(result.is_ok());
 
-        let result = PgProperties::_delete_location(&mut conn, location_id);
+        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
         assert!(result.is_ok());
     }
 }

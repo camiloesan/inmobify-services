@@ -12,7 +12,7 @@ pub trait PropertiesRepository {
         conn: &mut PgConnection,
         property: NewProperty,
     ) -> Result<uuid::Uuid, diesel::result::Error>;
-    fn _delete_property(
+    fn delete_property_by_uuid(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
     ) -> Result<i32, diesel::result::Error>;
@@ -20,7 +20,7 @@ pub trait PropertiesRepository {
         conn: &mut PgConnection,
         location: NewLocation,
     ) -> Result<i32, diesel::result::Error>;
-    fn _delete_location(
+    fn delete_location_by_id(
         conn: &mut PgConnection,
         location_id: i32,
     ) -> Result<i32, diesel::result::Error>;
@@ -30,4 +30,8 @@ pub trait PropertiesRepository {
         image_path: String,
     ) -> Result<i32, diesel::result::Error>;
     fn get_states(conn: &mut PgConnection) -> Result<Vec<State>, diesel::result::Error>;
+    fn get_location_id_by_property_uuid(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+    ) -> Result<i32, diesel::result::Error>;
 }
