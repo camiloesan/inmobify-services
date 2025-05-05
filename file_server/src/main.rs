@@ -19,7 +19,7 @@ async fn main() -> std::io::Result<()> {
             .service(routes::upload)
             .service(routes::delete_file)
             .service(routes::delete_directory)
-            .service(Files::new("/images", "../images").show_files_listing())
+            .service(Files::new("/images", "file_server/images").show_files_listing())
             .wrap(cors)
     })
     .bind("0.0.0.0:12006")?
