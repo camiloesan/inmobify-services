@@ -1,8 +1,10 @@
 use std::str::FromStr;
 
+use crate::dal::sch_models::{UpdateLocation, UpdateProperty};
 use crate::dto::new_property::NewProperty;
 use crate::dto::property_detail::PropertyDetail;
 use crate::dto::update_image_path::UpdateImagePath;
+use crate::dto::update_property::UpdatedProperty;
 use crate::DbPool;
 use crate::{
     dal::{db_operations::PgProperties, repository::PropertiesRepository},
@@ -120,6 +122,79 @@ pub async fn create_property(
         Ok(property_uuid) => HttpResponse::Ok().json(property_uuid.to_string()),
         Err(err) => {
             error!("Failed to create property: {}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Updates an existing property
+#[put("/property/{id}")]
+pub async fn update_property(
+    pool: web::Data<DbPool>,
+    id: web::Path<String>,
+    updated_property_json: web::Json<UpdatedProperty>,
+) -> impl Responder {
+    info!("request to update property with ID: {}", id);
+
+    let uuid = match uuid::Uuid::from_str(&id) {
+        Ok(value) => value,
+        Err(e) => {
+            error!("Misformatted uuid: {}", e);
+            return HttpResponse::BadRequest().finish();
+        }
+    };
+
+    let property = updated_property_json.clone();
+    let updated_property_sch = UpdateProperty {
+        title: Some(property.title),
+        img_path: Some(property.img_path),
+        description: Some(property.description),
+        n_rooms: Some(property.n_rooms),
+        n_bathrooms: Some(property.n_bathrooms),
+        sqm: Some(property.sqm),
+        priority: Some(property.priority),
+        price: Some(property.price),
+        property_type_id: Some(property.property_type_id),
+        disposition_type_id: Some(property.disposition_type_id),
+    };
+    let updated_location_sch = UpdateLocation {
+        street: Some(property.street),
+        house_number: Some(property.house_number),
+        neighborhood: Some(property.neighborhood),
+        zip_code: Some(property.zip_code),
+        latitude: Some(property.latitude),
+        longitude: Some(property.longitude),
+        city_name: Some(property.city_name),
+        state_id: Some(property.state_id),
+    };
+
+    let result = web::block(move || match pool.get() {
+        Ok(mut conn) => {
+            match PgProperties::update_property_location_transaction(
+                &mut conn,
+                uuid,
+                updated_property_sch,
+                updated_location_sch,
+            ) {
+                Ok(_) => true,
+                Err(e) => {
+                    error!("Error while updating property and location: {}", e);
+                    false
+                }
+            }
+        }
+        Err(e) => {
+            error!("Error while getting database pool: {}", e);
+            false
+        }
+    })
+    .await;
+
+    match result {
+        Ok(true) => HttpResponse::Ok().finish(),
+        Ok(false) => HttpResponse::Conflict().finish(),
+        Err(e) => {
+            error!("Couldn't update property: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }

@@ -54,6 +54,23 @@ pub struct NewProperty<'a> {
     pub disposition_type_id: i32,
 }
 
+#[derive(AsChangeset)]
+#[diesel(table_name = properties)]
+pub struct UpdateProperty {
+    pub title: Option<String>,
+    pub img_path: Option<String>,
+    pub description: Option<String>,
+    pub n_rooms: Option<i32>,
+    pub n_bathrooms: Option<i32>,
+    pub sqm: Option<f32>,
+    pub priority: Option<i32>,
+    pub price: Option<f32>,
+    // pub owner_id: Option<uuid::Uuid>,
+    // pub location_id: Option<i32>,
+    pub property_type_id: Option<i32>,
+    pub disposition_type_id: Option<i32>,
+}
+
 #[derive(Queryable, Identifiable, Selectable, Debug, PartialEq)]
 #[diesel(table_name = locations)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -80,6 +97,19 @@ pub struct NewLocation<'a> {
     pub longitude: &'a str,
     pub city_name: &'a str,
     pub state_id: i32,
+}
+
+#[derive(AsChangeset)]
+#[diesel(table_name = locations)]
+pub struct UpdateLocation {
+    pub street: Option<String>,
+    pub house_number: Option<String>,
+    pub neighborhood: Option<String>,
+    pub zip_code: Option<String>,
+    pub latitude: Option<String>,
+    pub longitude: Option<String>,
+    pub city_name: Option<String>,
+    pub state_id: Option<i32>,
 }
 
 #[derive(Queryable, Debug)]

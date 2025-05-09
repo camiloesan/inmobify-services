@@ -1,6 +1,9 @@
 use diesel::PgConnection;
 
-use super::sch_models::{NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State};
+use super::sch_models::{
+    NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State, UpdateLocation,
+    UpdateProperty,
+};
 
 pub trait PropertiesRepository {
     fn fetch_top_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails>;
@@ -20,6 +23,12 @@ pub trait PropertiesRepository {
         conn: &mut PgConnection,
         location: NewLocation,
     ) -> Result<i32, diesel::result::Error>;
+    fn update_property_location_transaction(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+        updated_property: UpdateProperty,
+        updated_location: UpdateLocation,
+    ) -> Result<(), diesel::result::Error>;
     fn delete_location_by_id(
         conn: &mut PgConnection,
         location_id: i32,

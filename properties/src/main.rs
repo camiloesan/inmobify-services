@@ -66,6 +66,7 @@ async fn main() -> std::io::Result<()> {
             .service(routes::get_states)
             .service(routes::get_user_properties)
             .service(routes::delete_property)
+            .service(routes::update_property)
             .wrap(cors)
     })
     .bind("0.0.0.0:12004")?

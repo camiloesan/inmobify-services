@@ -1,19 +1,13 @@
-use crate::dal::{
-    repository::PropertiesRepository,
-    sch_models::{PropertyPreview, PropertyWithDetails},
-    schema::{
-        disposition_types,
-        locations::{self},
-        properties::{self, created_at},
-        property_types, states,
-    },
-};
+use crate::dal::repository::PropertiesRepository;
 use diesel::prelude::*;
 use dotenvy::dotenv;
 use log::error;
 use std::env;
 
-use super::sch_models::{Location, NewLocation, NewProperty, State};
+use super::sch_models::{
+    Location, NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State,
+    UpdateLocation, UpdateProperty,
+};
 
 #[derive(Clone)]
 pub struct PgProperties {}
@@ -35,25 +29,29 @@ impl PgProperties {
 
 impl PropertiesRepository for PgProperties {
     fn fetch_top_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails> {
+        use crate::dal::schema::disposition_types::dsl::*;
+        use crate::dal::schema::locations::dsl::*;
         use crate::dal::schema::properties::dsl::properties;
+        use crate::dal::schema::property_types::dsl as property_types;
+        use crate::dal::schema::states::dsl as states;
 
         let result = properties
             .limit(10)
-            .inner_join(locations::table.inner_join(states::table))
-            .inner_join(property_types::table)
-            .inner_join(disposition_types::table)
+            .inner_join(locations.inner_join(states::states))
+            .inner_join(property_types::property_types)
+            .inner_join(disposition_types)
             .select((
                 properties::all_columns(),
-                locations::street,
-                locations::house_number,
-                locations::neighborhood,
-                locations::zip_code,
-                locations::city_name,
+                street,
+                house_number,
+                neighborhood,
+                zip_code,
+                city_name,
                 states::name,
-                locations::latitude,
-                locations::longitude,
+                latitude,
+                longitude,
                 property_types::type_,
-                disposition_types::disposition,
+                disposition,
             ))
             .load::<PropertyWithDetails>(conn);
 
@@ -70,24 +68,31 @@ impl PropertiesRepository for PgProperties {
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
     ) -> Option<PropertyWithDetails> {
-        let result = properties::table
-            .inner_join(locations::table.inner_join(states::table))
-            .inner_join(property_types::table)
-            .inner_join(disposition_types::table)
+        use crate::dal::schema::disposition_types::dsl::*;
+        use crate::dal::schema::locations::dsl::*;
+        use crate::dal::schema::properties::dsl::*;
+        use crate::dal::schema::properties::id as p_id;
+        use crate::dal::schema::property_types::dsl as property_types;
+        use crate::dal::schema::states::dsl as states;
+
+        let result = properties
+            .inner_join(locations.inner_join(states::states))
+            .inner_join(property_types::property_types)
+            .inner_join(disposition_types)
             .select((
-                properties::all_columns,
-                locations::street,
-                locations::house_number,
-                locations::neighborhood,
-                locations::zip_code,
-                locations::city_name,
+                properties::all_columns(),
+                street,
+                house_number,
+                neighborhood,
+                zip_code,
+                city_name,
                 states::name,
-                locations::latitude,
-                locations::longitude,
+                latitude,
+                longitude,
                 property_types::type_,
-                disposition_types::disposition,
+                disposition,
             ))
-            .filter(properties::id.eq(property_id))
+            .filter(p_id.eq(property_id))
             .first::<PropertyWithDetails>(conn);
 
         match result {
@@ -103,19 +108,53 @@ impl PropertiesRepository for PgProperties {
         conn: &mut PgConnection,
         property: NewProperty,
     ) -> Result<uuid::Uuid, diesel::result::Error> {
-        diesel::insert_into(properties::table)
+        use crate::dal::schema::properties::dsl::*;
+
+        diesel::insert_into(properties)
             .values(&property)
             .execute(conn)?;
 
         Ok(property.id)
     }
 
+    fn update_property_location_transaction(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+        updated_property: UpdateProperty,
+        updated_location: UpdateLocation,
+    ) -> Result<(), diesel::result::Error> {
+        use crate::dal::schema::locations::id as l_id;
+        use crate::dal::schema::locations::table as locations;
+        use crate::dal::schema::properties::dsl::*;
+        use crate::dal::schema::properties::id as p_id;
+
+        let result = conn.transaction(|conn| {
+            let loc_id = properties
+                .select(location_id)
+                .filter(p_id.eq(property_id))
+                .get_result::<i32>(conn)?;
+
+            diesel::update(properties.filter(p_id.eq(property_id)))
+                .set(&updated_property)
+                .execute(conn)?;
+
+            diesel::update(locations.filter(l_id.eq(loc_id)))
+                .set(&updated_location)
+                .execute(conn)?;
+
+            diesel::result::QueryResult::Ok(())
+        });
+
+        result
+    }
+
     fn delete_property_by_uuid(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
     ) -> Result<i32, diesel::result::Error> {
-        let result = diesel::delete(properties::table.filter(properties::id.eq(property_id)))
-            .execute(conn)?;
+        use crate::dal::schema::properties::dsl::*;
+
+        let result = diesel::delete(properties.filter(id.eq(property_id))).execute(conn)?;
 
         Ok(result as i32)
     }
@@ -124,7 +163,9 @@ impl PropertiesRepository for PgProperties {
         conn: &mut PgConnection,
         location: NewLocation,
     ) -> Result<i32, diesel::result::Error> {
-        let location = diesel::insert_into(locations::table)
+        use crate::dal::schema::locations::dsl::*;
+
+        let location = diesel::insert_into(locations)
             .values(&location)
             .get_result::<Location>(conn)?;
 
@@ -135,8 +176,9 @@ impl PropertiesRepository for PgProperties {
         conn: &mut PgConnection,
         location_id: i32,
     ) -> Result<i32, diesel::result::Error> {
-        let result =
-            diesel::delete(locations::table.filter(locations::id.eq(location_id))).execute(conn)?;
+        use crate::dal::schema::locations::dsl::*;
+
+        let result = diesel::delete(locations.filter(id.eq(location_id))).execute(conn)?;
 
         Ok(result as i32)
     }
@@ -146,8 +188,10 @@ impl PropertiesRepository for PgProperties {
         property_id: uuid::Uuid,
         image_path: String,
     ) -> Result<i32, diesel::result::Error> {
-        let result = diesel::update(properties::table.filter(properties::id.eq(property_id)))
-            .set(properties::img_path.eq(image_path))
+        use crate::dal::schema::properties::dsl::*;
+
+        let result = diesel::update(properties.filter(id.eq(property_id)))
+            .set(img_path.eq(image_path))
             .execute(conn)?;
 
         Ok(result as i32)
@@ -165,21 +209,24 @@ impl PropertiesRepository for PgProperties {
         conn: &mut PgConnection,
         user_id: uuid::Uuid,
     ) -> Result<Vec<super::sch_models::PropertyPreview>, diesel::result::Error> {
-        use crate::dal::schema::properties::dsl::properties as properties_schema;
+        use crate::dal::schema::locations::dsl::*;
+        use crate::dal::schema::properties::dsl::*;
+        use crate::dal::schema::properties::id as p_id;
+        use crate::dal::schema::states::dsl as states;
 
-        let result = properties_schema
-            .inner_join(locations::table.inner_join(states::table))
+        let result = properties
+            .inner_join(locations.inner_join(states::states))
             .select((
-                properties::id,
-                properties::title,
-                locations::street,
-                locations::house_number,
-                locations::neighborhood,
-                locations::zip_code,
-                locations::city_name,
+                p_id,
+                title,
+                street,
+                house_number,
+                neighborhood,
+                zip_code,
+                city_name,
                 states::name,
             ))
-            .filter(properties::owner_id.eq(user_id))
+            .filter(owner_id.eq(user_id))
             .order(created_at.desc())
             .limit(5)
             .load::<PropertyPreview>(conn)?;
@@ -191,9 +238,11 @@ impl PropertiesRepository for PgProperties {
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
     ) -> Result<i32, diesel::result::Error> {
-        let result = properties::table
-            .filter(properties::id.eq(property_id))
-            .select(properties::location_id)
+        use crate::dal::schema::properties::dsl::*;
+
+        let result = properties
+            .filter(id.eq(property_id))
+            .select(location_id)
             .first::<i32>(conn)?;
 
         Ok(result)
@@ -205,6 +254,84 @@ mod tests {
     use super::*;
     use std::str::FromStr;
     use uuid::Uuid;
+
+    #[test]
+    fn test_update_property_location_transaction() {
+        let mut conn = PgProperties::_tests_get_connection();
+
+        // set up
+        let location = NewLocation {
+            street: "test",
+            house_number: "test",
+            neighborhood: "test",
+            zip_code: "test",
+            latitude: "test",
+            longitude: "test",
+            city_name: "test",
+            state_id: 1,
+        };
+        let result = PgProperties::create_location(&mut conn, location);
+        let location_id = result.unwrap();
+        println!("Location ID = {}", location_id);
+        assert!(location_id > 0);
+
+        let property = NewProperty {
+            description: Some("test"),
+            price: 1000.0,
+            location_id,
+            id: Uuid::new_v4(),
+            title: "Test Property",
+            img_path: "test.jpg",
+            n_rooms: 3,
+            n_bathrooms: 2,
+            sqm: 100.0,
+            priority: 1,
+            owner_id: Uuid::new_v4(),
+            property_type_id: 1,
+            disposition_type_id: 1,
+        };
+        let result = PgProperties::create_property(&mut conn, property);
+        let property_id = result.unwrap();
+
+        let updated_location = UpdateLocation {
+            street: Some("test".to_string()),
+            house_number: Some("test".to_string()),
+            neighborhood: Some("test".to_string()),
+            zip_code: Some("test".to_string()),
+            latitude: Some("test".to_string()),
+            longitude: Some("test".to_string()),
+            city_name: Some("test".to_string()),
+            state_id: Some(1),
+        };
+
+        let updated_property = UpdateProperty {
+            title: Some("new".to_string()),
+            img_path: Some("new".to_string()),
+            description: Some("new".to_string()),
+            n_rooms: Some(1),
+            n_bathrooms: Some(1),
+            sqm: Some(1.1),
+            priority: Some(1),
+            price: Some(1.1),
+            property_type_id: Some(1),
+            disposition_type_id: Some(1),
+        };
+
+        // main assert
+        let result = PgProperties::update_property_location_transaction(
+            &mut conn,
+            property_id,
+            updated_property,
+            updated_location,
+        );
+        assert!(result.is_ok());
+
+        // tear down
+        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
+        assert!(result.is_ok());
+        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        assert!(result.is_ok());
+    }
 
     #[test]
     fn test_get_top_5_properties_by_user_id() {
@@ -220,12 +347,51 @@ mod tests {
     #[test]
     fn get_location_id_by_property_uuid() {
         let mut conn = PgProperties::_tests_get_connection();
-        let property_id = Uuid::from_str("d4a52262-48ee-4119-b9de-dfd80246a0d6").unwrap();
+
+        // set up
+        let location = NewLocation {
+            street: "test",
+            house_number: "test",
+            neighborhood: "test",
+            zip_code: "test",
+            latitude: "test",
+            longitude: "test",
+            city_name: "test",
+            state_id: 1,
+        };
+        let result = PgProperties::create_location(&mut conn, location);
+        let location_id = result.unwrap();
+        println!("Location ID = {}", location_id);
+        assert!(location_id > 0);
+
+        let property = NewProperty {
+            description: Some("test"),
+            price: 1000.0,
+            location_id,
+            id: Uuid::new_v4(),
+            title: "Test Property",
+            img_path: "test.jpg",
+            n_rooms: 3,
+            n_bathrooms: 2,
+            sqm: 100.0,
+            priority: 1,
+            owner_id: Uuid::new_v4(),
+            property_type_id: 1,
+            disposition_type_id: 1,
+        };
+        let result = PgProperties::create_property(&mut conn, property);
+        let property_id = result.unwrap();
+
+        // main assert
         let result =
             PgProperties::get_location_id_by_property_uuid(&mut conn, property_id).unwrap();
-        println!("{}", result);
+        assert!(result != 0);
 
-        assert!(result != 0)
+        // tear down
+        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
+        assert!(result.is_ok());
+        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        assert!(result.is_ok());
     }
 
     #[test]
