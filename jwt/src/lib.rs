@@ -1,8 +1,8 @@
-use actix_web::dev::ServiceRequest;
+use std::path::Path;
+use actix_web::dev::{ServiceRequest};
 use actix_web::error::ErrorUnauthorized;
 use actix_web::Error;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use dotenvy::dotenv;
 use jsonwebtoken::{decode, DecodingKey, Validation, encode, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -13,8 +13,12 @@ pub struct Claims {
     pub exp: usize,
 }
 
+fn load_env() {
+    dotenvy::from_path(Path::new("../auth/.env")).expect("dotenvy failed");
+}
+
 pub fn generate_jwt(user_id: String) -> Result<String, jsonwebtoken::errors::Error> {
-    dotenv().ok();
+    load_env();
     let secret_key = std::env::var("JWT_SECRET").expect("JWT_SECRET not in .env");
 
     let expiration = SystemTime::now()
@@ -39,7 +43,7 @@ pub async fn validate_jwt(
     req: ServiceRequest,
     credentials: BearerAuth,
 ) -> Result<ServiceRequest, Error> {
-    dotenv().ok();
+    load_env();
     let secret_key = std::env::var("JWT_SECRET").expect("JWT_SECRET not in .env");
 
     let token = credentials.token();

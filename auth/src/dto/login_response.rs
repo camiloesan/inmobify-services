@@ -14,6 +14,4 @@ pub struct LoginResponse {
     pub email: String,
     #[schema(example = "1234567890", required = true)]
     pub phone: String,
-    #[schema(example = "1", required = true)]
-    pub user_type_id: i32,
 }
