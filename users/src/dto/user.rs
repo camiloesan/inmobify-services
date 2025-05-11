@@ -15,6 +15,4 @@ pub struct User {
     pub phone: String,
     #[schema(example = "2024-02-13", required = true)]
     pub created_at: String,
-    #[schema(example = "1", required = true)]
-    pub user_type_id: i32,
 }

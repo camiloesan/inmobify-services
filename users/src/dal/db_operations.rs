@@ -39,7 +39,6 @@ impl UsersRepository for PgUsers {
             email: &user.email,
             phone: &user.phone,
             password: &user.password,
-            user_type_id: user.user_type_id,
         };
 
         let result = diesel::insert_into(users::table)
@@ -72,7 +71,6 @@ impl UsersRepository for PgUsers {
                 email: user.email,
                 phone: user.phone,
                 created_at: user.created_at.to_string(),
-                user_type_id: user.user_type_id,
             }),
             Ok(None) => None,
             Err(e) => {
@@ -101,7 +99,6 @@ impl UsersRepository for PgUsers {
                 email: user.email,
                 phone: user.phone,
                 created_at: user.created_at.to_string(),
-                user_type_id: user.user_type_id,
             }),
             Err(e) => {
                 error!("{}", e);
@@ -139,7 +136,6 @@ mod tests {
             email: "marg@gmail.com".to_string(),
             phone: "2288909021".to_string(),
             password: "699f69e5-a2a4-4168-a535-b900a1c822be".to_string(),
-            user_type_id: 1,
         };
 
         // assertion
@@ -162,7 +158,6 @@ mod tests {
             email: "marg@gmail.com".to_string(),
             phone: "2288909021".to_string(),
             password: "699f69e5-a2a4-4168-a535-b900a1c822be".to_string(),
-            user_type_id: 1,
         };
 
         // create assertion
@@ -191,7 +186,6 @@ mod tests {
             email: "marg@gmail.com".to_string(),
             phone: "2288909021".to_string(),
             password: "699f69e5-a2a4-4168-a535-b900a1c822be".to_string(),
-            user_type_id: 1,
         };
 
         // assertion 1
@@ -206,7 +200,6 @@ mod tests {
             phone: None,
             password: None,
             created_at: None,
-            user_type_id: None,
         };
 
         // main assertion

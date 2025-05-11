@@ -1,15 +1,6 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    user_types (id) {
-        id -> Int4,
-        #[sql_name = "type"]
-        #[max_length = 16]
-        type_ -> Varchar,
-    }
-}
-
-diesel::table! {
     users (id) {
         id -> Uuid,
         #[max_length = 64]
@@ -23,13 +14,5 @@ diesel::table! {
         #[max_length = 64]
         password -> Varchar,
         created_at -> Timestamp,
-        user_type_id -> Int4,
     }
 }
-
-diesel::joinable!(users -> user_types (user_type_id));
-
-diesel::allow_tables_to_appear_in_same_query!(
-    user_types,
-    users,
-);
