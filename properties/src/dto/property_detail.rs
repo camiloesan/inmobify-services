@@ -14,6 +14,7 @@ pub struct PropertyDetail {
     pub street: String,
     pub owner_id: String,
     pub created_at: String,
+    pub modified_at: String,
     pub house_number: String,
     pub neighborhood: String,
     pub zip_code: String,
