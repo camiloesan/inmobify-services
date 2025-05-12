@@ -52,6 +52,7 @@ diesel::table! {
         priority -> Int4,
         price -> Float4,
         owner_id -> Uuid,
+        modified_at -> Timestamp,
         created_at -> Timestamp,
         location_id -> Int4,
         property_type_id -> Int4,

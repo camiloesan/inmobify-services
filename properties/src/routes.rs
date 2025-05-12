@@ -239,6 +239,7 @@ pub async fn fetch_property_details(
                 street: property_details.street,
                 owner_id: property_details.property.owner_id.to_string(),
                 created_at: property_details.property.created_at.to_string(),
+                modified_at: property_details.property.modified_at.to_string(),
                 house_number: property_details.house_number,
                 neighborhood: property_details.neighborhood,
                 zip_code: property_details.zip_code,

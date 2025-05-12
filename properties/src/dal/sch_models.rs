@@ -19,6 +19,7 @@ pub struct Property {
     pub price: f32,
     pub owner_id: Uuid,
     pub created_at: NaiveDateTime,
+    pub modified_at: NaiveDateTime,
     pub location_id: i32,
     pub property_type_id: i32,
     pub disposition_type_id: i32,
