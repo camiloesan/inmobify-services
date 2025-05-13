@@ -47,4 +47,9 @@ pub trait PropertiesRepository {
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
     ) -> Result<i32, diesel::result::Error>;
+    fn update_property_priority(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+        new_priority: i32,
+    ) -> Result<i32, diesel::result::Error>;
 }
