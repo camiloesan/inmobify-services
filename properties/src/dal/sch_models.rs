@@ -66,8 +66,7 @@ pub struct UpdateProperty {
     pub sqm: Option<f32>,
     pub priority: Option<i32>,
     pub price: Option<f32>,
-    // pub owner_id: Option<uuid::Uuid>,
-    // pub location_id: Option<i32>,
+    pub modified_at: Option<chrono::NaiveDateTime>,
     pub property_type_id: Option<i32>,
     pub disposition_type_id: Option<i32>,
 }

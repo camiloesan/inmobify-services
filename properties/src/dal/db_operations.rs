@@ -313,6 +313,7 @@ mod tests {
             sqm: Some(1.1),
             priority: Some(1),
             price: Some(1.1),
+            modified_at: Some(chrono::Utc::now().naive_utc()),
             property_type_id: Some(1),
             disposition_type_id: Some(1),
         };

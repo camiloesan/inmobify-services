@@ -154,6 +154,7 @@ pub async fn update_property(
         sqm: Some(property.sqm),
         priority: Some(property.priority),
         price: Some(property.price),
+        modified_at: Some(chrono::Utc::now().naive_utc()),
         property_type_id: Some(property.property_type_id),
         disposition_type_id: Some(property.disposition_type_id),
     };
