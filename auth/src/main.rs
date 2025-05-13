@@ -11,8 +11,15 @@ use std::env;
 
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
 
+fn load_env() {
+    let first_try = dotenv();
+    if first_try.is_err() {
+        dotenvy::from_path(std::path::Path::new("users/.env")).expect("dotenvy failed");
+    }
+}
+
 fn initialize_db_pool() -> DbPool {
-    dotenv().ok();
+    load_env();
     let conn_spec = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let manager = r2d2::ConnectionManager::<PgConnection>::new(conn_spec);
     r2d2::Pool::builder()

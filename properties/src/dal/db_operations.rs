@@ -1,6 +1,5 @@
-use crate::dal::repository::PropertiesRepository;
+use crate::{dal::repository::PropertiesRepository, load_env};
 use diesel::prelude::*;
-use dotenvy::dotenv;
 use log::error;
 use std::env;
 
@@ -14,7 +13,7 @@ pub struct PgProperties {}
 
 impl PgProperties {
     fn _tests_get_connection() -> PgConnection {
-        dotenv().ok();
+        load_env();
         let local_db_url = env::var("LOCAL_DB_URL").expect("LOCAL_DB_URL must be set");
         let conn = PgConnection::establish(&local_db_url);
         match conn {

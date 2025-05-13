@@ -17,9 +17,16 @@ use utoipa_swagger_ui::SwaggerUi;
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
 
+fn load_env() {
+    let first_try = dotenv();
+    if first_try.is_err() {
+        dotenvy::from_path(std::path::Path::new("users/.env")).expect("dotenvy failed");
+    }
+}
+
 /// Run diesel migrations at compile-time
 fn run_migrations() {
-    dotenv().ok();
+    load_env();
     let url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut conn = PgConnection::establish(&url).expect("Failed to establish connection");
     conn.run_pending_migrations(MIGRATIONS)

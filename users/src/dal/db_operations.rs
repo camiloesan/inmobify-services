@@ -1,8 +1,7 @@
 use crate::dal::repository::UsersRepository;
 use crate::dal::sch_models::{NewUser, User};
-use crate::dto;
+use crate::{dto, load_env};
 use diesel::prelude::*;
-use dotenvy::dotenv;
 use log::error;
 use std::env;
 use uuid::Uuid;
@@ -14,7 +13,7 @@ pub struct PgUsers {}
 
 impl PgUsers {
     fn _tests_get_connection() -> PgConnection {
-        dotenv().ok();
+        load_env();
         let local_db_url = env::var("LOCAL_DB_URL").expect("LOCAL_DB_URL must be set");
         let conn = PgConnection::establish(&local_db_url);
         match conn {

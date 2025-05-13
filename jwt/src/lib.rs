@@ -1,9 +1,8 @@
-use std::path::Path;
-use actix_web::dev::{ServiceRequest};
+use actix_web::dev::ServiceRequest;
 use actix_web::error::ErrorUnauthorized;
 use actix_web::Error;
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use jsonwebtoken::{decode, DecodingKey, Validation, encode, EncodingKey, Header};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -14,7 +13,10 @@ pub struct Claims {
 }
 
 fn load_env() {
-    dotenvy::from_path(Path::new("../auth/.env")).expect("dotenvy failed");
+    let first_try = dotenvy::dotenv();
+    if first_try.is_err() {
+        dotenvy::from_path(std::path::Path::new("auth/.env")).expect("dotenvy failed");
+    }
 }
 
 pub fn generate_jwt(user_id: String) -> Result<String, jsonwebtoken::errors::Error> {
