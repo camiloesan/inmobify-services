@@ -5,6 +5,7 @@ use crate::dto::new_property::NewProperty;
 use crate::dto::property_detail::PropertyDetail;
 use crate::dto::update_image_path::UpdateImagePath;
 use crate::dto::update_property::UpdatedProperty;
+use crate::dto::update_property_priority::UpdatePropertyPriority;
 use crate::DbPool;
 use crate::{
     dal::{db_operations::PgProperties, repository::PropertiesRepository},
@@ -400,6 +401,45 @@ pub async fn delete_property(pool: web::Data<DbPool>, id: web::Path<String>) -> 
         }
         Err(e) => {
             error!("Error deleting property: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+#[put("/property-priority/{id}")]
+async fn update_property_priority(
+    pool: web::Data<DbPool>,
+    id: web::Path<String>,
+    priority: web::Json<UpdatePropertyPriority>,
+) -> HttpResponse {
+    info!("Updating property priority with ID: {}", id);
+
+    let result = web::block(move || -> bool {
+        let mut result = true;
+
+        let mut conn = pool.get().unwrap();
+        let property_id = Uuid::from_str(&id).unwrap();
+        let property_update_result =
+            PgProperties::update_property_priority(&mut conn, property_id, priority.0.new_priority);
+
+        if property_update_result.is_err() {
+            result = false;
+        }
+
+        result
+    })
+    .await;
+
+    match result {
+        Ok(exists) => {
+            if exists {
+                HttpResponse::Ok().finish()
+            } else {
+                HttpResponse::NotFound().finish()
+            }
+        }
+        Err(e) => {
+            error!("Error updating property priority: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }

@@ -247,6 +247,23 @@ impl PropertiesRepository for PgProperties {
 
         Ok(result)
     }
+
+    fn update_property_priority(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+        new_priority: i32,
+    ) -> Result<i32, diesel::result::Error> {
+        use crate::dal::schema::properties::dsl::*;
+
+        let result = diesel::update(properties.filter(id.eq(property_id)))
+            .set((
+                priority.eq(new_priority),
+                modified_at.eq(chrono::Utc::now().naive_utc()),
+            ))
+            .execute(conn)?;
+
+        Ok(result as i32)
+    }
 }
 
 #[cfg(test)]
@@ -254,6 +271,55 @@ mod tests {
     use super::*;
     use std::str::FromStr;
     use uuid::Uuid;
+
+    #[test]
+    fn test_update_property_priority() {
+        let mut conn = PgProperties::_tests_get_connection();
+
+        // set up
+        let location = NewLocation {
+            street: "test",
+            house_number: "test",
+            neighborhood: "test",
+            zip_code: "test",
+            latitude: "test",
+            longitude: "test",
+            city_name: "test",
+            state_id: 1,
+        };
+        let result = PgProperties::create_location(&mut conn, location);
+        let location_id = result.unwrap();
+        println!("Location ID = {}", location_id);
+        assert!(location_id > 0);
+
+        let property = NewProperty {
+            description: Some("test"),
+            price: 1000.0,
+            location_id,
+            id: Uuid::new_v4(),
+            title: "Test Property",
+            img_path: "test.jpg",
+            n_rooms: 3,
+            n_bathrooms: 2,
+            sqm: 100.0,
+            priority: 0,
+            owner_id: Uuid::new_v4(),
+            property_type_id: 1,
+            disposition_type_id: 1,
+        };
+        let result = PgProperties::create_property(&mut conn, property);
+        let property_id = result.unwrap();
+
+        // main assert
+        let result = PgProperties::update_property_priority(&mut conn, property_id, 1);
+        assert!(result.is_ok() && result.unwrap() == 1);
+
+        // tear down
+        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
+        assert!(result.is_ok());
+        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        assert!(result.is_ok());
+    }
 
     #[test]
     fn test_update_property_location_transaction() {
