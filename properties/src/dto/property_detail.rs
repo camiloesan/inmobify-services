@@ -20,8 +20,11 @@ pub struct PropertyDetail {
     pub zip_code: String,
     pub city: String,
     pub state: String,
+    pub state_id: i32,
     pub latitude: String,
     pub longitude: String,
     pub property_type: String,
+    pub property_type_id: i32,
     pub disposition: String,
+    pub disposition_type_id: i32,
 }

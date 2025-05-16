@@ -1,4 +1,7 @@
-use crate::{dal::repository::PropertiesRepository, load_env};
+use crate::{
+    dal::{repository::PropertiesRepository, schema::properties::disposition_type_id},
+    load_env,
+};
 use diesel::prelude::*;
 use log::error;
 use std::env;
@@ -47,10 +50,13 @@ impl PropertiesRepository for PgProperties {
                 zip_code,
                 city_name,
                 states::name,
+                states::id,
                 latitude,
                 longitude,
                 property_types::type_,
+                property_types::id,
                 disposition,
+                disposition_type_id,
             ))
             .load::<PropertyWithDetails>(conn);
 
@@ -86,16 +92,22 @@ impl PropertiesRepository for PgProperties {
                 zip_code,
                 city_name,
                 states::name,
+                states::id,
                 latitude,
                 longitude,
                 property_types::type_,
+                property_types::id,
                 disposition,
+                disposition_type_id,
             ))
             .filter(p_id.eq(property_id))
             .first::<PropertyWithDetails>(conn);
 
         match result {
-            Ok(property) => Some(property),
+            Ok(property) => {
+                println!("{:?}", property);
+                Some(property)
+            }
             Err(e) => {
                 error!("Error fetching property details: {}", e);
                 None

@@ -247,10 +247,13 @@ pub async fn fetch_property_details(
                 zip_code: property_details.zip_code,
                 city: property_details.city_name,
                 state: property_details.state_name,
+                state_id: property_details.state_id,
                 latitude: property_details.latitude,
                 longitude: property_details.longitude,
                 property_type: property_details.property_type,
+                property_type_id: property_details.property_type_id,
                 disposition: property_details.disposition,
+                disposition_type_id: property_details.disposition_type_id,
             };
 
             HttpResponse::Ok().json(property_detail)
