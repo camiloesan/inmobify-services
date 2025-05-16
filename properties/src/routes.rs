@@ -291,6 +291,194 @@ pub async fn update_img_path(
     }
 }
 
+/// Insert images array by property
+#[post("/property-images/{id}")]
+pub async fn insert_images_by_property(
+    pool: web::Data<DbPool>,
+    id: web::Path<String>,
+    images: web::Json<Vec<crate::dto::new_image::NewImage>>,
+) -> HttpResponse {
+    let result_uuid = Uuid::from_str(&id.into_inner());
+    let property_uuid = match result_uuid {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            error!("Invalid uuid format");
+            return HttpResponse::BadRequest().finish();
+        }
+    };
+
+    let sch_images_vec = images
+        .clone()
+        .into_iter()
+        .map(|dto| crate::dal::sch_models::NewImage {
+            id: uuid::Uuid::new_v4(),
+            path: dto.path,
+            name: dto.name,
+            property_id: property_uuid,
+        })
+        .collect();
+
+    let result = web::block(move || {
+        let conn_result = pool.get();
+        match conn_result {
+            Ok(mut conn) => PgProperties::insert_images(&mut conn, sch_images_vec)
+                .expect("Failed to get images from database"),
+            Err(e) => {
+                error!("Failed getting connection from pool: {}", e);
+                0
+            }
+        }
+    })
+    .await;
+
+    match result {
+        Ok(_) => HttpResponse::Ok().finish(),
+        Err(e) => {
+            error!("Error deleting property: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Fetch images by property uuid
+#[get("/property-images/{id}")]
+pub async fn fetch_images_by_property(
+    pool: web::Data<DbPool>,
+    id: web::Path<String>,
+) -> HttpResponse {
+    info!("Fetching images of property with ID: {}", id);
+
+    let result_uuid = Uuid::from_str(&id.into_inner());
+    let property_uuid = match result_uuid {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            error!("Invalid uuid format");
+            return HttpResponse::BadRequest().finish();
+        }
+    };
+
+    let result = web::block(move || {
+        let conn_result = pool.get();
+        match conn_result {
+            Ok(mut conn) => PgProperties::fetch_images(&mut conn, property_uuid)
+                .expect("Failed to get images from database"),
+            Err(e) => {
+                error!("Failed getting connection from pool: {}", e);
+                vec![]
+            }
+        }
+    })
+    .await;
+
+    match result {
+        Ok(db_images) => {
+            let images_dto: Vec<crate::dto::image::Image> = db_images
+                .into_iter()
+                .map(|x| crate::dto::image::Image {
+                    id: x.id.to_string(),
+                    path: x.path,
+                    name: x.name,
+                })
+                .collect();
+
+            HttpResponse::Ok().json(images_dto)
+        }
+        Err(e) => {
+            error!("Error fetching properties: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Delete a single image by its uuid
+#[delete("/image/{id}")]
+pub async fn delete_image_by_uuid(pool: web::Data<DbPool>, id: web::Path<String>) -> HttpResponse {
+    info!("Deleting image with ID: {}", id);
+
+    let result_uuid = Uuid::from_str(&id.into_inner());
+    let image_uuid = match result_uuid {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            error!("Invalid uuid format");
+            return HttpResponse::BadRequest().finish();
+        }
+    };
+
+    let result = web::block(move || -> bool {
+        let mut conn = pool.get().unwrap();
+        let result = PgProperties::delete_image_by_uuid(&mut conn, image_uuid);
+
+        match result {
+            Ok(_) => return true,
+            Err(e) => {
+                error!("Could't delete all images by property: {}", e);
+                return false;
+            }
+        }
+    })
+    .await;
+
+    match result {
+        Ok(success) => {
+            if success {
+                HttpResponse::Ok().finish()
+            } else {
+                HttpResponse::NotFound().finish()
+            }
+        }
+        Err(e) => {
+            error!("Error deleting image: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Delete all images related to a property
+#[delete("/property-images/{id}")]
+pub async fn delete_all_property_images(
+    pool: web::Data<DbPool>,
+    id: web::Path<String>,
+) -> HttpResponse {
+    info!("Deleting all images for property with ID: {}", id);
+
+    let result_uuid = Uuid::from_str(&id.into_inner());
+    let property_uuid = match result_uuid {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            error!("Invalid uuid format");
+            return HttpResponse::BadRequest().finish();
+        }
+    };
+
+    let result = web::block(move || -> bool {
+        let mut conn = pool.get().unwrap();
+        let result = PgProperties::delete_all_images_by_property_uuid(&mut conn, property_uuid);
+
+        match result {
+            Ok(_) => return true,
+            Err(e) => {
+                error!("Could't delete all images by property: {}", e);
+                return false;
+            }
+        }
+    })
+    .await;
+
+    match result {
+        Ok(success) => {
+            if success {
+                HttpResponse::Ok().finish()
+            } else {
+                HttpResponse::NotFound().finish()
+            }
+        }
+        Err(e) => {
+            error!("Error deleting images: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
 /// Get all states
 #[get("/states")]
 pub async fn get_states(pool: web::Data<DbPool>) -> HttpResponse {
@@ -364,6 +552,7 @@ pub async fn get_user_properties(
     path = "/property/{id}",
     responses(
         (status = 200, description = "Property deleted successfully"),
+        (status = 400, description = "Invalid uuid format"),
         (status = 404, description = "Property not found"),
         (status = 500, description = "Internal server error")
     )
@@ -372,25 +561,27 @@ pub async fn get_user_properties(
 pub async fn delete_property(pool: web::Data<DbPool>, id: web::Path<String>) -> HttpResponse {
     info!("Deleting property with ID: {}", id);
 
-    let result = web::block(move || -> bool {
-        let mut result = true;
+    let result_uuid = Uuid::from_str(&id.into_inner());
+    let property_uuid = match result_uuid {
+        Ok(uuid) => uuid,
+        Err(_) => {
+            error!("Invalid uuid format");
+            return HttpResponse::BadRequest().finish();
+        }
+    };
 
+    let result = web::block(move || -> bool {
         let mut conn = pool.get().unwrap();
 
-        let location_id =
-            PgProperties::get_location_id_by_property_uuid(&mut conn, Uuid::from_str(&id).unwrap())
-                .unwrap();
+        let result = PgProperties::delete_property_location_transaction(&mut conn, property_uuid);
 
-        let property_deletion_result =
-            PgProperties::delete_property_by_uuid(&mut conn, Uuid::from_str(&id).unwrap());
-
-        if property_deletion_result.unwrap() > 0 {
-            PgProperties::delete_location_by_id(&mut conn, location_id).unwrap();
-        } else {
-            result = false;
+        match result {
+            Ok(_) => return true,
+            Err(e) => {
+                error!("Failed to delete property and its location: {}", e);
+                return false;
+            }
         }
-
-        result
     })
     .await;
 

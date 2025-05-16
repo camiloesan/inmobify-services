@@ -1,8 +1,8 @@
 use diesel::PgConnection;
 
 use super::sch_models::{
-    NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State, UpdateLocation,
-    UpdateProperty,
+    Image, NewImage, NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State,
+    UpdateLocation, UpdateProperty,
 };
 
 pub trait PropertiesRepository {
@@ -15,10 +15,10 @@ pub trait PropertiesRepository {
         conn: &mut PgConnection,
         property: NewProperty,
     ) -> Result<uuid::Uuid, diesel::result::Error>;
-    fn delete_property_by_uuid(
+    fn delete_property_location_transaction(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
-    ) -> Result<i32, diesel::result::Error>;
+    ) -> Result<(), diesel::result::Error>;
     fn create_location(
         conn: &mut PgConnection,
         location: NewLocation,
@@ -29,9 +29,25 @@ pub trait PropertiesRepository {
         updated_property: UpdateProperty,
         updated_location: UpdateLocation,
     ) -> Result<(), diesel::result::Error>;
-    fn delete_location_by_id(
+    fn _delete_location_by_id(
         conn: &mut PgConnection,
         location_id: i32,
+    ) -> Result<i32, diesel::result::Error>;
+    fn insert_images(
+        conn: &mut PgConnection,
+        new_images: Vec<NewImage>,
+    ) -> Result<i32, diesel::result::Error>;
+    fn fetch_images(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+    ) -> Result<Vec<Image>, diesel::result::Error>;
+    fn delete_image_by_uuid(
+        conn: &mut PgConnection,
+        image_id: uuid::Uuid,
+    ) -> Result<i32, diesel::result::Error>;
+    fn delete_all_images_by_property_uuid(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
     ) -> Result<i32, diesel::result::Error>;
     fn update_image_path(
         conn: &mut PgConnection,
@@ -43,10 +59,6 @@ pub trait PropertiesRepository {
         conn: &mut PgConnection,
         user_id: uuid::Uuid,
     ) -> Result<Vec<PropertyPreview>, diesel::result::Error>;
-    fn get_location_id_by_property_uuid(
-        conn: &mut PgConnection,
-        property_id: uuid::Uuid,
-    ) -> Result<i32, diesel::result::Error>;
     fn update_property_priority(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,

@@ -1,4 +1,4 @@
-use crate::dal::schema::{locations, properties};
+use crate::dal::schema::{images, locations, properties};
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
@@ -134,4 +134,20 @@ pub struct PropertyWithDetails {
     pub property_type_id: i32,
     pub disposition: String,
     pub disposition_type_id: i32,
+}
+
+#[derive(Queryable, Debug)]
+pub struct Image {
+    pub id: uuid::Uuid,
+    pub path: String,
+    pub name: String,
+}
+
+#[derive(Insertable, Debug, Clone)]
+#[diesel(table_name = images)]
+pub struct NewImage {
+    pub id: uuid::Uuid,
+    pub path: String,
+    pub name: String,
+    pub property_id: uuid::Uuid,
 }
