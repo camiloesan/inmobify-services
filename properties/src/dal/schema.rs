@@ -17,6 +17,18 @@ diesel::table! {
 }
 
 diesel::table! {
+    images (id) {
+        id -> Uuid,
+        #[max_length = 255]
+        name -> Varchar,
+        #[max_length = 255]
+        path -> Varchar,
+        created_at -> Timestamp,
+        property_id -> Uuid,
+    }
+}
+
+diesel::table! {
     locations (id) {
         id -> Int4,
         #[max_length = 255]
@@ -94,6 +106,7 @@ diesel::table! {
     }
 }
 
+diesel::joinable!(images -> properties (property_id));
 diesel::joinable!(locations -> states (state_id));
 diesel::joinable!(properties -> disposition_types (disposition_type_id));
 diesel::joinable!(properties -> locations (location_id));
@@ -104,6 +117,7 @@ diesel::joinable!(property_status_history -> property_statuses (status_id));
 diesel::allow_tables_to_appear_in_same_query!(
     cities,
     disposition_types,
+    images,
     locations,
     properties,
     property_status_history,

@@ -2,7 +2,7 @@ use crate::{
     dal::{repository::PropertiesRepository, schema::properties::disposition_type_id},
     load_env,
 };
-use diesel::prelude::*;
+use diesel::{delete, insert_into, prelude::*};
 use log::error;
 use std::env;
 
@@ -104,10 +104,7 @@ impl PropertiesRepository for PgProperties {
             .first::<PropertyWithDetails>(conn);
 
         match result {
-            Ok(property) => {
-                println!("{:?}", property);
-                Some(property)
-            }
+            Ok(property) => Some(property),
             Err(e) => {
                 error!("Error fetching property details: {}", e);
                 None
@@ -159,15 +156,28 @@ impl PropertiesRepository for PgProperties {
         result
     }
 
-    fn delete_property_by_uuid(
+    fn delete_property_location_transaction(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
-    ) -> Result<i32, diesel::result::Error> {
-        use crate::dal::schema::properties::dsl::*;
+    ) -> Result<(), diesel::result::Error> {
+        use crate::dal::schema::locations::dsl as locations_sch;
+        use crate::dal::schema::properties::dsl as properties_sch;
 
-        let result = diesel::delete(properties.filter(id.eq(property_id))).execute(conn)?;
+        let result = conn.transaction(|conn| {
+            let loc_id = properties_sch::properties
+                .select(properties_sch::location_id)
+                .filter(properties_sch::id.eq(property_id))
+                .get_result::<i32>(conn)?;
 
-        Ok(result as i32)
+            delete(properties_sch::properties.filter(properties_sch::id.eq(property_id)))
+                .execute(conn)?;
+
+            delete(locations_sch::locations.filter(locations_sch::id.eq(loc_id))).execute(conn)?;
+
+            diesel::result::QueryResult::Ok(())
+        });
+
+        result
     }
 
     fn create_location(
@@ -183,7 +193,7 @@ impl PropertiesRepository for PgProperties {
         Ok(location.id)
     }
 
-    fn delete_location_by_id(
+    fn _delete_location_by_id(
         conn: &mut PgConnection,
         location_id: i32,
     ) -> Result<i32, diesel::result::Error> {
@@ -245,20 +255,6 @@ impl PropertiesRepository for PgProperties {
         Ok(result)
     }
 
-    fn get_location_id_by_property_uuid(
-        conn: &mut PgConnection,
-        property_id: uuid::Uuid,
-    ) -> Result<i32, diesel::result::Error> {
-        use crate::dal::schema::properties::dsl::*;
-
-        let result = properties
-            .filter(id.eq(property_id))
-            .select(location_id)
-            .first::<i32>(conn)?;
-
-        Ok(result)
-    }
-
     fn update_property_priority(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
@@ -275,13 +271,89 @@ impl PropertiesRepository for PgProperties {
 
         Ok(result as i32)
     }
+
+    fn fetch_images(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+    ) -> Result<Vec<super::sch_models::Image>, diesel::result::Error> {
+        use crate::dal::schema::images::dsl as images_schema;
+
+        let result = images_schema::images
+            .filter(images_schema::property_id.eq(property_id))
+            .select((images_schema::id, images_schema::name, images_schema::path))
+            .load::<super::sch_models::Image>(conn)?;
+
+        Ok(result)
+    }
+
+    fn insert_images(
+        conn: &mut PgConnection,
+        new_images: Vec<super::sch_models::NewImage>,
+    ) -> Result<i32, diesel::result::Error> {
+        use crate::dal::schema::images::dsl as images_schema;
+
+        let result = insert_into(images_schema::images)
+            .values(new_images)
+            .execute(conn)?;
+
+        Ok(result as i32)
+    }
+
+    fn delete_image_by_uuid(
+        conn: &mut PgConnection,
+        image_id: uuid::Uuid,
+    ) -> Result<i32, diesel::result::Error> {
+        use crate::dal::schema::images::dsl as images_sch;
+
+        let result =
+            delete(images_sch::images.filter(images_sch::id.eq(image_id))).execute(conn)?;
+
+        Ok(result as i32)
+    }
+
+    fn delete_all_images_by_property_uuid(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+    ) -> Result<i32, diesel::result::Error> {
+        use crate::dal::schema::images::dsl as images_sch;
+
+        let result = delete(images_sch::images.filter(images_sch::property_id.eq(property_id)))
+            .execute(conn)?;
+
+        Ok(result as i32)
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::dal::sch_models::NewImage;
+
     use super::*;
     use std::str::FromStr;
     use uuid::Uuid;
+
+    #[test]
+    fn test_insert_images() {
+        let mut conn = PgProperties::_tests_get_connection();
+
+        // set up
+        let id = Uuid::new_v4();
+        let new_image = NewImage {
+            id,
+            path: "hoiajdf".to_string(),
+            name: "dfjs".to_string(),
+            property_id: Uuid::from_str("550e8400-e29b-41d4-a716-446655440000").unwrap(),
+        };
+
+        // main assert
+        let v_images = vec![new_image];
+        let result = PgProperties::insert_images(&mut conn, v_images).unwrap();
+        assert!(result > 0);
+
+        // tear down
+        let result = PgProperties::delete_image_by_uuid(&mut conn, id);
+        assert!(result.is_ok() && result.unwrap() > 0);
+    }
 
     #[test]
     fn test_update_property_priority() {
@@ -326,9 +398,7 @@ mod tests {
         assert!(result.is_ok() && result.unwrap() == 1);
 
         // tear down
-        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
-        assert!(result.is_ok());
-        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        let result = PgProperties::delete_property_location_transaction(&mut conn, property_id);
         assert!(result.is_ok());
     }
 
@@ -405,9 +475,7 @@ mod tests {
         assert!(result.is_ok());
 
         // tear down
-        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
-        assert!(result.is_ok());
-        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        let result = PgProperties::delete_property_location_transaction(&mut conn, property_id);
         assert!(result.is_ok());
     }
 
@@ -420,56 +488,6 @@ mod tests {
         println!("{:?}", result);
 
         assert!(!result.is_empty());
-    }
-
-    #[test]
-    fn get_location_id_by_property_uuid() {
-        let mut conn = PgProperties::_tests_get_connection();
-
-        // set up
-        let location = NewLocation {
-            street: "test",
-            house_number: "test",
-            neighborhood: "test",
-            zip_code: "test",
-            latitude: "test",
-            longitude: "test",
-            city_name: "test",
-            state_id: 1,
-        };
-        let result = PgProperties::create_location(&mut conn, location);
-        let location_id = result.unwrap();
-        println!("Location ID = {}", location_id);
-        assert!(location_id > 0);
-
-        let property = NewProperty {
-            description: Some("test"),
-            price: 1000.0,
-            location_id,
-            id: Uuid::new_v4(),
-            title: "Test Property",
-            img_path: "test.jpg",
-            n_rooms: 3,
-            n_bathrooms: 2,
-            sqm: 100.0,
-            priority: 1,
-            owner_id: Uuid::new_v4(),
-            property_type_id: 1,
-            disposition_type_id: 1,
-        };
-        let result = PgProperties::create_property(&mut conn, property);
-        let property_id = result.unwrap();
-
-        // main assert
-        let result =
-            PgProperties::get_location_id_by_property_uuid(&mut conn, property_id).unwrap();
-        assert!(result != 0);
-
-        // tear down
-        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
-        assert!(result.is_ok());
-        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
-        assert!(result.is_ok());
     }
 
     #[test]
@@ -531,10 +549,7 @@ mod tests {
             PgProperties::update_image_path(&mut conn, property_id, image_path.to_string());
         assert!(result.is_ok());
 
-        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
-        assert!(result.is_ok());
-
-        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        let result = PgProperties::delete_property_location_transaction(&mut conn, property_id);
         assert!(result.is_ok());
     }
 
@@ -572,7 +587,7 @@ mod tests {
         println!("Location ID = {}", location_id);
         assert!(location_id > 0);
 
-        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        let result = PgProperties::_delete_location_by_id(&mut conn, location_id);
         assert!(result.is_ok());
     }
 
@@ -613,10 +628,7 @@ mod tests {
         let property_id = result.unwrap();
         println!("Property ID = {}", property_id);
 
-        let result = PgProperties::delete_property_by_uuid(&mut conn, property_id);
-        assert!(result.is_ok());
-
-        let result = PgProperties::delete_location_by_id(&mut conn, location_id);
+        let result = PgProperties::delete_property_location_transaction(&mut conn, property_id);
         assert!(result.is_ok());
     }
 }
