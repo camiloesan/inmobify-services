@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct UpdatedProperty {
     pub title: String,
-    pub img_path: String,
+    pub image_path: String,
     pub description: String,
     pub n_rooms: i32,
     pub n_bathrooms: i32,

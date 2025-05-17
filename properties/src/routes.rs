@@ -148,7 +148,7 @@ pub async fn update_property(
     let property = updated_property_json.clone();
     let updated_property_sch = UpdateProperty {
         title: Some(property.title),
-        img_path: Some(property.img_path),
+        img_path: Some(property.image_path),
         description: Some(property.description),
         n_rooms: Some(property.n_rooms),
         n_bathrooms: Some(property.n_bathrooms),
@@ -268,7 +268,7 @@ pub async fn fetch_property_details(
 
 /// Update the image path of a property
 #[put("/property-img-path/{id}")]
-pub async fn update_img_path(
+pub async fn update_image_path(
     pool: web::Data<DbPool>,
     id: web::Path<String>,
     img_path: web::Json<UpdateImagePath>,
@@ -280,8 +280,12 @@ pub async fn update_img_path(
 
     let result = web::block(move || {
         let mut conn = pool.get().unwrap();
-        PgProperties::update_image_path(&mut conn, Uuid::from_str(&id).unwrap(), img_path.img_path)
-            .unwrap();
+        PgProperties::update_image_path(
+            &mut conn,
+            Uuid::from_str(&id).unwrap(),
+            img_path.image_path,
+        )
+        .unwrap();
     })
     .await;
 
@@ -298,6 +302,11 @@ pub async fn insert_images_by_property(
     id: web::Path<String>,
     images: web::Json<Vec<crate::dto::new_image::NewImage>>,
 ) -> HttpResponse {
+    info!(
+        "Inserting image information array for property with ID: {}",
+        id
+    );
+
     let result_uuid = Uuid::from_str(&id.into_inner());
     let property_uuid = match result_uuid {
         Ok(uuid) => uuid,

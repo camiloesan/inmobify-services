@@ -36,7 +36,7 @@ async fn upload(
     Ok(HttpResponse::Ok().finish())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 struct DeleteFilePayload {
     filename: String,
 }

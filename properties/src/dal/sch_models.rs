@@ -139,8 +139,8 @@ pub struct PropertyWithDetails {
 #[derive(Queryable, Debug)]
 pub struct Image {
     pub id: uuid::Uuid,
-    pub path: String,
     pub name: String,
+    pub path: String,
 }
 
 #[derive(Insertable, Debug, Clone)]

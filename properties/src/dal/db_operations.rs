@@ -104,10 +104,7 @@ impl PropertiesRepository for PgProperties {
             .first::<PropertyWithDetails>(conn);
 
         match result {
-            Ok(property) => {
-                println!("{:?}", property);
-                Some(property)
-            }
+            Ok(property) => Some(property),
             Err(e) => {
                 error!("Error fetching property details: {}", e);
                 None
@@ -282,9 +279,9 @@ impl PropertiesRepository for PgProperties {
         use crate::dal::schema::images::dsl as images_schema;
 
         let result = images_schema::images
-            .filter(images_schema::id.eq(property_id))
+            .filter(images_schema::property_id.eq(property_id))
             .select((images_schema::id, images_schema::name, images_schema::path))
-            .load(conn)?;
+            .load::<super::sch_models::Image>(conn)?;
 
         Ok(result)
     }
