@@ -74,10 +74,10 @@ async fn main() -> std::io::Result<()> {
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
             .service(routes::create_user)
+            .service(routes::get_user_by_uuid)
             .service(
                 web::scope("")
                     .wrap(HttpAuthentication::bearer(validate_jwt))
-                    .service(routes::get_user_by_uuid),
             )
     })
     .bind("0.0.0.0:12005")?
