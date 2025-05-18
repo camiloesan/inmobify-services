@@ -1,0 +1,48 @@
+use std::str::FromStr;
+
+use crate::dto::new_prospect::NewProspect;
+use crate::DbPool;
+use crate::dal::{db_operations::PgAppointments, repository::AppointmentsRepository};
+use actix_web::post;
+use actix_web::{
+    web::{self},
+    HttpResponse, Responder,
+};
+use log::{error, info};
+use uuid::Uuid;
+
+/// Create a new prospect.
+#[post("/prospect")]
+pub async fn create_prospect(
+    pool: web::Data<DbPool>,
+    new_prospect: web::Json<NewProspect>,
+) -> impl Responder {
+    info!("request to create prospect received");
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+
+        let prospect = crate::dal::sch_models::NewProspect {
+            id: Uuid::new_v4(),
+            name: &new_prospect.name,
+            last_name: &new_prospect.last_name,
+            email: &new_prospect.email,
+            phone: &new_prospect.phone,
+            property_id: Uuid::from_str(&new_prospect.property_id).unwrap(),
+            owner_id: Uuid::from_str(&new_prospect.owner_id).unwrap(),
+        };
+        let prospect_uuid = PgAppointments::create_prospect(&mut conn, prospect).unwrap();
+
+        prospect_uuid
+
+    })
+    .await;
+
+    match result {
+        Ok(prospect_uuid) => HttpResponse::Ok().json(prospect_uuid.to_string()),
+        Err(err) => {
+            error!("Failed to create prospect: {}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
