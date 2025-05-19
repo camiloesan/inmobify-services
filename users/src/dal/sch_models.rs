@@ -25,7 +25,6 @@ pub struct UpdateUser {
     pub email: Option<String>,
     pub phone: Option<String>,
     pub password: Option<String>,
-    pub created_at: Option<NaiveDateTime>,
 }
 
 #[derive(Insertable)]

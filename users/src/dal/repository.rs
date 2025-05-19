@@ -3,8 +3,7 @@ use uuid::Uuid;
 
 use crate::dto::new_user::NewUser;
 use crate::dto::user::User;
-
-use super::sch_models::UpdateUser;
+use crate::dto::update_user::UpdateUser;
 
 pub trait UsersRepository {
     fn create_user(user: NewUser, conn: &mut PgConnection) -> Option<String>;
