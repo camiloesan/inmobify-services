@@ -60,7 +60,8 @@ async fn main() -> std::io::Result<()> {
             paths(
                 routes::create_user,
                 routes::get_user_by_uuid,
-                routes::delete_user_by_uuid
+                routes::delete_user_by_uuid,
+                routes::update_user_by_uuid
             ),
             components(schemas(dto::user::User, dto::new_user::NewUser))
         )]
@@ -75,6 +76,7 @@ async fn main() -> std::io::Result<()> {
             )
             .service(routes::create_user)
             .service(routes::get_user_by_uuid)
+            .service(routes::update_user_by_uuid)
             .service(
                 web::scope("")
                     .wrap(HttpAuthentication::bearer(validate_jwt))
