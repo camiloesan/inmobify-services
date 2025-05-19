@@ -1,12 +1,10 @@
 use crate::dal::repository::UsersRepository;
-use crate::dal::sch_models::{NewUser, User};
+use crate::dal::sch_models::{NewUser, User, UpdateUser};
 use crate::{dto, load_env};
 use diesel::prelude::*;
 use log::error;
 use std::env;
 use uuid::Uuid;
-
-use super::sch_models::UpdateUser;
 
 #[derive(Clone)]
 pub struct PgUsers {}
@@ -81,13 +79,22 @@ impl UsersRepository for PgUsers {
 
     fn update_user_by_uuid(
         uuid: Uuid,
-        updated_user: UpdateUser,
+        updated_user: dto::update_user::UpdateUser,
         conn: &mut PgConnection,
     ) -> Option<crate::dto::user::User> {
         use crate::dal::schema::users::dsl::*;
 
+        let diesel_updated_user = UpdateUser {
+            name: updated_user.name,
+            last_name: updated_user.last_name,
+            email: updated_user.email,
+            phone: updated_user.phone,
+            password: updated_user.password,
+        };
+
         let result = diesel::update(users.filter(id.eq(uuid)))
-            .set(updated_user)
+            .set(diesel_updated_user)
+            .returning(User::as_select())
             .get_result::<User>(conn);
 
         match result {
@@ -192,13 +199,12 @@ mod tests {
         let result = PgUsers::create_user(user.clone(), &mut conn);
         assert!(result.is_some());
 
-        let updated_user = UpdateUser {
+        let updated_user = crate::dto::update_user::UpdateUser {
             name: Some("Emiliano".to_string()),
             last_name: None,
             email: None,
             phone: None,
             password: None,
-            created_at: None,
         };
 
         // main assertion

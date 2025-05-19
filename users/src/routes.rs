@@ -1,12 +1,11 @@
 use crate::{
     dal::{db_operations::PgUsers, repository::UsersRepository},
     dto::new_user::NewUser,
+    dto::update_user::UpdateUser,
     DbPool,
 };
 use actix_web::{
-    delete, get, post,
-    web::{self},
-    HttpResponse, Responder,
+    delete, get, post, put, web::{self}, HttpResponse, Responder
 };
 //use actix_web_validator::Json;
 use log::{error, info};
@@ -106,6 +105,46 @@ pub async fn delete_user_by_uuid(
         }
         Err(e) => {
             error!("{}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Update a user by its uuid.
+#[utoipa::path(
+    responses(
+        (status = 200, description = "User updated successfully."),
+        (status = 404, description = "User not found."),
+        (status = 500, description = "Internal server error occurred.")
+    )
+)]
+#[put("/users/{id}")]
+pub async fn update_user_by_uuid(
+    pool: web::Data<DbPool>,
+    path: web::Path<String>,
+    updated_user: web::Json<UpdateUser>,
+) -> impl Responder {
+    info!("Request to update user received");
+
+    if let Err(errors) = updated_user.validate() {
+        return HttpResponse::BadRequest().json(errors);
+    }
+
+    let user_id = path.into_inner();
+    let parsed_uuid = uuid::Uuid::parse_str(&user_id).expect("bad format uiid");
+    let updated_user = updated_user.into_inner();
+
+    let result = web::block(move || {
+        let mut conn = pool.get().expect("failed to connect to database");
+        PgUsers::update_user_by_uuid(parsed_uuid, updated_user, &mut conn)
+    })
+    .await;
+
+   match result {
+        Ok(Some(user)) => HttpResponse::Ok().json(user),
+        Ok(None) => HttpResponse::NotFound().body("User not found"),
+        Err(e) => {
+            error!("Error updating user: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
