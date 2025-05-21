@@ -35,6 +35,7 @@ pub struct PropertyPreview {
     pub zip_code: String,
     pub city_name: String,
     pub state_name: String,
+    pub priority: i32,
 }
 
 #[derive(Insertable, Debug)]

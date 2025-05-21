@@ -246,6 +246,7 @@ impl PropertiesRepository for PgProperties {
                 zip_code,
                 city_name,
                 states::name,
+                priority,
             ))
             .filter(owner_id.eq(user_id))
             .order(created_at.desc())

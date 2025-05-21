@@ -544,6 +544,7 @@ pub async fn get_user_properties(
                         property.state_name,
                         property.zip_code,
                     ),
+                    priority: property.priority,
                 })
                 .collect::<Vec<_>>();
             HttpResponse::Ok().json(dto)
