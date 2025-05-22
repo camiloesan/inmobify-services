@@ -27,14 +27,14 @@ use uuid::Uuid;
         (status = 500, description = "Internal server error occurred."),
     )
 )]
-#[get("/boosted-properties")]
+#[get("/properties")]
 pub async fn fetch_boosted_properties(pool: web::Data<DbPool>) -> impl Responder {
-    info!("request to get boosted properties");
+    info!("request to get properties");
 
     let result = web::block(move || {
         let conn_result = pool.get();
         match conn_result {
-            Ok(mut conn) => PgProperties::fetch_top_properties(&mut conn),
+            Ok(mut conn) => PgProperties::fetch_properties(&mut conn),
             Err(e) => {
                 error!("Failed to get connection from pool {}", e);
                 vec![]

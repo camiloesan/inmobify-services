@@ -30,7 +30,7 @@ impl PgProperties {
 }
 
 impl PropertiesRepository for PgProperties {
-    fn fetch_top_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails> {
+    fn fetch_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails> {
         use crate::dal::schema::disposition_types::dsl::*;
         use crate::dal::schema::locations::dsl::*;
         use crate::dal::schema::properties::dsl::properties;
@@ -38,7 +38,7 @@ impl PropertiesRepository for PgProperties {
         use crate::dal::schema::states::dsl as states;
 
         let result = properties
-            .limit(10)
+            //.limit(10)
             .inner_join(locations.inner_join(states::states))
             .inner_join(property_types::property_types)
             .inner_join(disposition_types)
