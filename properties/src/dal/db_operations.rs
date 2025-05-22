@@ -30,15 +30,14 @@ impl PgProperties {
 }
 
 impl PropertiesRepository for PgProperties {
-    fn fetch_top_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails> {
+    fn fetch_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails> {
         use crate::dal::schema::disposition_types::dsl::*;
         use crate::dal::schema::locations::dsl::*;
-        use crate::dal::schema::properties::dsl::properties;
+        use crate::dal::schema::properties::dsl::{properties, priority};
         use crate::dal::schema::property_types::dsl as property_types;
         use crate::dal::schema::states::dsl as states;
 
         let result = properties
-            .limit(10)
             .inner_join(locations.inner_join(states::states))
             .inner_join(property_types::property_types)
             .inner_join(disposition_types)
@@ -58,6 +57,7 @@ impl PropertiesRepository for PgProperties {
                 disposition,
                 disposition_type_id,
             ))
+            .order_by(priority.desc())
             .load::<PropertyWithDetails>(conn);
 
         match result {
@@ -502,7 +502,7 @@ mod tests {
     #[test]
     fn test_fetch_top_properties() {
         let mut conn = PgProperties::_tests_get_connection();
-        let result = PgProperties::fetch_top_properties(&mut conn);
+        let result = PgProperties::fetch_properties(&mut conn);
         assert!(!result.is_empty());
     }
 
