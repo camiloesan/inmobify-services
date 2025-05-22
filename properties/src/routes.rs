@@ -28,7 +28,7 @@ use uuid::Uuid;
     )
 )]
 #[get("/properties")]
-pub async fn fetch_boosted_properties(pool: web::Data<DbPool>) -> impl Responder {
+pub async fn fetch_properties(pool: web::Data<DbPool>) -> impl Responder {
     info!("request to get properties");
 
     let result = web::block(move || {
