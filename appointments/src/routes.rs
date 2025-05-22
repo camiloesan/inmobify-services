@@ -5,6 +5,7 @@ use crate::DbPool;
 use crate::dal::{db_operations::PgAppointments, repository::AppointmentsRepository};
 use actix_web::post;
 use actix_web::{
+    get,
     web::{self},
     HttpResponse, Responder,
 };
@@ -42,6 +43,43 @@ pub async fn create_prospect(
         Ok(prospect_uuid) => HttpResponse::Ok().json(prospect_uuid.to_string()),
         Err(err) => {
             error!("Failed to create prospect: {}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Get appointments
+#[get("/user-prospects/{id}")]
+pub async fn get_user_prospects(
+    pool: web::Data<DbPool>,
+    user_id: web::Path<String>,
+) -> HttpResponse {
+    info!("Getting user prospects");
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        PgAppointments::get_prospects_by_user_id(&mut conn, Uuid::from_str(&user_id).unwrap())
+            .unwrap()
+    })
+    .await;
+
+    match result {
+        Ok(prospects) => {
+            let dto = prospects
+            .into_iter()
+            .map(|prospect| crate::dto::prospect_summary::ProspectSummary {
+                id: prospect.id.to_string(),
+                name: prospect.name,
+                last_name: prospect.last_name,
+                email: prospect.email,
+                phone: prospect.phone,
+                property_id: prospect.property_id.to_string(),
+            })
+            .collect::<Vec<_>>();
+        HttpResponse::Ok().json(dto)
+        }
+        Err(e) => {
+            error!("Error getting user prospects: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }
