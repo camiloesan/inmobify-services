@@ -256,6 +256,7 @@ impl PropertiesRepository for PgProperties {
         Ok(result)
     }
 
+
     fn update_property_priority(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
@@ -322,6 +323,40 @@ impl PropertiesRepository for PgProperties {
             .execute(conn)?;
 
         Ok(result as i32)
+    }
+
+    fn get_property_preview_by_property_id(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+    ) -> Option<PropertyPreview> {
+        use crate::dal::schema::locations::dsl::*;
+        use crate::dal::schema::properties::dsl::*;
+        use crate::dal::schema::properties::id as p_id;
+        use crate::dal::schema::states::dsl as states;
+
+        let result = properties
+            .inner_join(locations.inner_join(states::states))
+            .select((
+                p_id,
+                title,
+                street,
+                house_number,
+                neighborhood,
+                zip_code,
+                city_name,
+                states::name,
+                priority,
+            ))
+            .filter(p_id.eq(property_id))
+            .first::<PropertyPreview>(conn);
+
+        match result {
+            Ok(property) => Some(property),
+            Err(e) => {
+                error!("Error fetching property preview: {}", e);
+                None
+            }
+        }
     }
 }
 

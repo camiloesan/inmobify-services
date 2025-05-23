@@ -73,6 +73,7 @@ async fn main() -> std::io::Result<()> {
                 web::scope("")
                     .wrap(HttpAuthentication::bearer(validate_jwt))
                     .service(routes::create_prospect)
+                    .service(routes::get_user_prospects)
             )
     })
     .bind("0.0.0.0:12001")?

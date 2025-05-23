@@ -4,11 +4,13 @@ mod routes;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use diesel::{prelude::*, r2d2};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 use env_logger::Env;
 use std::env;
+use jwt::validate_jwt;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -63,6 +65,7 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .wrap(cors)
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
@@ -79,7 +82,11 @@ async fn main() -> std::io::Result<()> {
             .service(routes::fetch_images_by_property)
             .service(routes::delete_all_property_images)
             .service(routes::delete_image_by_uuid)
-            .wrap(cors)
+            .service(
+                web::scope("")
+                    .wrap(HttpAuthentication::bearer(validate_jwt))
+                    .service(routes::get_user_property)
+            )
     })
     .bind("0.0.0.0:12004")?
     .run()

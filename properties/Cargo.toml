@@ -22,3 +22,5 @@ actix-web-validator = "6.0.0"
 lazy_static = "1.5.0"
 regex = "1.11.1"
 awc = "*"
+jwt = { path = "../jwt" }
+actix-web-httpauth = "0.6"
