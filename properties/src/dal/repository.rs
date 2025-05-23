@@ -6,7 +6,7 @@ use super::sch_models::{
 };
 
 pub trait PropertiesRepository {
-    fn fetch_top_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails>;
+    fn fetch_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails>;
     fn fetch_property_details(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,

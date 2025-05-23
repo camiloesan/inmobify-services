@@ -57,7 +57,7 @@ async fn main() -> std::io::Result<()> {
 
         #[derive(OpenApi)]
         #[openapi(
-            paths(routes::fetch_boosted_properties),
+            paths(routes::fetch_properties),
             components(schemas(dto::property_summary::PropertySummary))
         )]
         struct ApiDoc;
@@ -69,7 +69,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
-            .service(routes::fetch_boosted_properties)
+            .service(routes::fetch_properties)
             .service(routes::fetch_property_details)
             .service(routes::create_property)
             .service(routes::update_image_path)

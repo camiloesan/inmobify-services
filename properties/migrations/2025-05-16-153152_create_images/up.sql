@@ -1,71 +1,57 @@
 create table images (
-    id uuid primary key,
-    name varchar(255) not null,
-    path varchar(255) not null,
-    created_at timestamp default NOW () not null,
-    property_id uuid not null references properties (id)
+                        id uuid primary key,
+                        name varchar(255) not null,
+                        path varchar(255) not null,
+                        created_at timestamp default NOW() not null,
+                        property_id uuid not null references properties (id)
 );
 
 INSERT INTO
     images (id, name, path, property_id)
 VALUES
-    (
-        '71f3a414-9c1e-4588-a524-8f6a45628a3e',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img1.jpg',
-        '550e8400-e29b-41d4-a716-446655440000'
-    ),
-    (
-        '83b5c45f-1d6b-42a2-94c5-dc3c23c53a2f',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img2.jpg',
-        'f47ac10b-58cc-4372-a567-0e02b2c3d479'
-    ),
-    (
-        '96e7d12c-8a4f-4b37-8367-1f729d7f3de5',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img3.jpg',
-        '6b86b273-ff34-435d-a4d0-5e5e5e5e5e5e'
-    ),
-    (
-        'a9f8e21b-7c6d-4e5f-9384-2b1c76543a0d',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img4.jpg',
-        'd1a5e4f8-9e9e-4e9b-8d8c-7e7e7e7e7e7e'
-    ),
-    (
-        'b2a1f34c-9d5e-4c7b-8a96-3e4f12d78b9c',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img5.jpg',
-        'de196703-f444-4f26-a7e2-72a7aba737b0'
-    ),
-    (
-        'c4d5e6f7-8a9b-4c7d-9e8f-1a2b3c4d5e6f',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img6.jpg',
-        '123e4567-e89b-12d3-a456-426614174000'
-    ),
-    (
-        'd7e8f9a0-b1c2-4d3e-5f6a-7b8c9d0e1f2a',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img7.jpg',
-        '987fc10b-58cc-4372-a567-0e02b2c3d479'
-    ),
-    (
-        'e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img8.jpg',
-        '3c9e4f8d-9e9e-4e9b-8d8c-3e3e3e3e3e3e'
-    ),
-    (
-        'f5e6d7c8-b9a0-1f2e-3d4c-5b6a7c8d9e0f',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img9.jpg',
-        '4d9e4f8e-9e9e-4e9b-8d8c-4e4e4e4e4e4e'
-    ),
-    (
-        '11223344-5566-7788-99aa-bbccddeeff00',
-        'Main image',
-        'http://localhost:12000/imf-files/images/img10.jpg',
-        '5e9e4f8f-9e9e-4e9b-8d8c-5e5e5e5e5e5e'
-    );
+    ('71f3a414-9c1e-4588-a524-8f6a45628a3e', 'Main image', 'http://localhost:12000/imf-files/images/img10.jpg', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'),
+    ('83b5c45f-1d6b-42a2-94c5-dc3c23c53a2f', 'Main image', 'http://localhost:12000/imf-files/images/img9.jpg', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e'),
+    ('96e7d12c-8a4f-4b37-8367-1f729d7f3de5', 'Main image', 'http://localhost:12000/imf-files/images/img1.jpg', 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f'),
+    ('a9f8e21b-7c6d-4e5f-9384-2b1c76543a0d', 'Main image', 'http://localhost:12000/imf-files/images/img2.jpg', 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a'),
+    ('b2a1f34c-9d5e-4c7b-8a96-3e4f12d78b9c', 'Main image', 'http://localhost:12000/imf-files/images/img3.jpg', 'e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b'),
+    ('c4d5e6f7-8a9b-4c7d-9e8f-1a2b3c4d5e6f', 'Main image', 'http://localhost:12000/imf-files/images/img4.jpg', 'f6a7b8c9-d0e1-2f3a-4b5c-6d7e8f9a0b1c'),
+    ('d7e8f9a0-b1c2-4d3e-5f6a-7b8c9d0e1f2a', 'Main image', 'http://localhost:12000/imf-files/images/img5.jpg', 'a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2d'),
+    ('e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b', 'Main image', 'http://localhost:12000/imf-files/images/img6.jpg', 'b8c9d0e1-f2a3-4b5c-6d7e-8f9a0b1c2d3e'),
+    ('f5e6d7c8-b9a0-1f2e-3d4c-5b6a7c8d9e0f', 'Main image', 'http://localhost:12000/imf-files/images/img7.jpg', 'c9d0e1f2-a3b4-5c6d-7e8f-9a0b1c2d3e4f'),
+    ('11223344-5566-7788-99aa-bbccddeeff00', 'Main image', 'http://localhost:12000/imf-files/images/img8.jpg', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a'),
+    ('22334455-6677-8899-aabb-ccddeeff0011', 'Main image', 'http://localhost:12000/imf-files/images/img9.jpg', 'e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6b'),
+    ('33445566-7788-99aa-bbcc-ddeeff001122', 'Main image', 'http://localhost:12000/imf-files/images/img10.jpg', 'f2a3b4c5-d6e7-8f9a-0b1c-2d3e4f5a6b7c'),
+    ('44556677-8899-aabb-ccdd-eeff00112233', 'Main image', 'http://localhost:12000/imf-files/images/img1.jpg', 'a3b4c5d6-e7f8-9a0b-1c2d-3e4f5a6b7c8d'),
+    ('55667788-99aa-bbcc-ddee-ff0011223344', 'Main image', 'http://localhost:12000/imf-files/images/img2.jpg', 'b4c5d6e7-f8a9-0b1c-2d3e-4f5a6b7c8d9e'),
+    ('66778899-aabb-ccdd-eeff-001122334455', 'Main image', 'http://localhost:12000/imf-files/images/img3.jpg', 'c5d6e7f8-a9b0-1c2d-3e4f-5a6b7c8d9e0f'),
+    ('778899aa-bbcc-ddee-ff00-112233445566', 'Main image', 'http://localhost:12000/imf-files/images/img4.jpg', 'd6e7f8a9-b0c1-2d3e-4f5a-6b7c8d9e0f1a'),
+    ('8899aabb-ccdd-eeff-0011-223344556677', 'Main image', 'http://localhost:12000/imf-files/images/img5.jpg', 'e7f8a9b0-c1d2-3e4f-5a6b-7c8d9e0f1a2b'),
+    ('99aabbcc-ddee-ff00-1122-334455667788', 'Main image', 'http://localhost:12000/imf-files/images/img6.jpg', 'f8a9b0c1-d2e3-4f5a-6b7c-8d9e0f1a2b3c'),
+    ('aabbccdd-eeff-0011-2233-445566778899', 'Main image', 'http://localhost:12000/imf-files/images/img7.jpg', 'a9b0c1d2-e3f4-5a6b-7c8d-9e0f1a2b3c4d'),
+    ('bbccffee-ff00-1122-3344-5566778899aa', 'Main image', 'http://localhost:12000/imf-files/images/img8.jpg', 'b0c1d2e3-f4a5-6b7c-8d9e-0f1a2b3c4d5e'),
+    ('ccddeeff-0011-2233-4455-66778899aabb', 'Main image', 'http://localhost:12000/imf-files/images/img9.jpg', 'c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f'),
+    ('ddeeff00-1122-3344-5566-778899aabbcc', 'Main image', 'http://localhost:12000/imf-files/images/img10.jpg', 'd2e3f4a5-b6c7-8d9e-0f1a-2b3c4d5e6f7a'),
+    ('eeff0011-2233-4455-6677-8899aabbccdd', 'Main image', 'http://localhost:12000/imf-files/images/img1.jpg', 'e3f4a5b6-c7d8-9e0f-1a2b-3c4d5e6f7a8b'),
+    ('ff001122-3344-5566-7788-99aabbccddee', 'Main image', 'http://localhost:12000/imf-files/images/img2.jpg', 'f4a5b6c7-d8e9-0f1a-2b3c-4d5e6f7a8b9c'),
+    ('00112233-4455-6677-8899-aabbccddeeff', 'Main image', 'http://localhost:12000/imf-files/images/img3.jpg', 'a5b6c7d8-e9f0-1a2b-3c4d-5e6f7a8b9c0d'),
+    ('11223344-5566-7788-99aa-bbcdeeff0011', 'Main image', 'http://localhost:12000/imf-files/images/img4.jpg', 'b6c7d8e9-f0a1-2b3c-4d5e-6f7a8b9c0d1e'),
+    ('22334455-6677-8899-aabb-cdeeff001122', 'Main image', 'http://localhost:12000/imf-files/images/img5.jpg', 'c7d8e9f0-a1b2-3c4d-5e6f-7a8b9c0d1e2f'),
+    ('33445566-7788-99aa-bbcc-deeff0011223', 'Main image', 'http://localhost:12000/imf-files/images/img6.jpg', 'd8e9f0a1-b2c3-4d5e-6f7a-8b9c0d1e2f3a'),
+    ('44556677-8899-aabb-ccdd-eeff00112234', 'Main image', 'http://localhost:12000/imf-files/images/img7.jpg', 'e9f0a1b2-c3d4-5e6f-7a8b-9c0d1e2f3a4b'),
+    ('55667788-99aa-bbcc-ddee-ff0011223345', 'Main image', 'http://localhost:12000/imf-files/images/img8.jpg', 'f0a1b2c3-d4e5-6f7a-8b9c-0d1e2f3a4b5c'),
+    ('66778899-aabb-ccdd-eeff-001122334456', 'Main image', 'http://localhost:12000/imf-files/images/img9.jpg', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6e'),
+    ('778899aa-bbcc-ddee-ff00-112233445567', 'Main image', 'http://localhost:12000/imf-files/images/img10.jpg', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7f'),
+    ('8899aabb-ccdd-eeff-0011-223344556678', 'Main image', 'http://localhost:12000/imf-files/images/img1.jpg', 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8a'),
+    ('99aabbcc-ddee-ff00-1122-334455667789', 'Main image', 'http://localhost:12000/imf-files/images/img2.jpg', 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9b'),
+    ('aabbccdd-eeff-0011-2233-44556677889a', 'Main image', 'http://localhost:12000/imf-files/images/img3.jpg', 'e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0c'),
+    ('bbccddee-ff00-1122-3344-5566778899ab', 'Main image', 'http://localhost:12000/imf-files/images/img4.jpg', 'f6a7b8c9-d0e1-2f3a-4b5c-6d7e8f9a0b1d'),
+    ('ccddeeff-0011-2233-4455-66778899aabc', 'Main image', 'http://localhost:12000/imf-files/images/img5.jpg', 'a7b8c9d0-e1f2-3a4b-5c6d-7e8f9a0b1c2e'),
+    ('ddeeff00-1122-3344-5566-778899aabbcd', 'Main image', 'http://localhost:12000/imf-files/images/img6.jpg', 'b8c9d0e1-f2a3-4b5c-6d7e-8f9a0b1c2d3f'),
+    ('eeff0011-2233-4455-6677-8899aabbccde', 'Main image', 'http://localhost:12000/imf-files/images/img7.jpg', 'c9d0e1f2-a3b4-5c6d-7e8f-9a0b1c2d3e4a'),
+    ('ff001122-3344-5566-7788-99aabbccddef', 'Main image', 'http://localhost:12000/imf-files/images/img8.jpg', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5b'),
+    ('00112233-4455-6677-8899-aabbccddeef0', 'Main image', 'http://localhost:12000/imf-files/images/img9.jpg', 'e1f2a3b4-c5d6-7e8f-9a0b-1c2d3e4f5a6c'),
+    ('11223344-5566-7788-99aa-bbcdeeff0012', 'Main image', 'http://localhost:12000/imf-files/images/img10.jpg', 'f2a3b4c5-d6e7-8f9a-0b1c-2d3e4f5a6b7d'),
+    ('22334455-6677-8899-aabb-cdeeff001123', 'Main image', 'http://localhost:12000/imf-files/images/img1.jpg', 'a3b4c5d6-e7f8-9a0b-1c2d-3e4f5a6b7c8e'),
+    ('33445566-7788-99aa-bbcc-deeff0011224', 'Main image', 'http://localhost:12000/imf-files/images/img2.jpg', 'b4c5d6e7-f8a9-0b1c-2d3e-4f5a6b7c8d9f'),
+    ('44556677-8899-aabb-ccdd-eeff00112235', 'Main image', 'http://localhost:12000/imf-files/images/img3.jpg', 'c5d6e7f8-a9b0-1c2d-3e4f-5a6b7c8d9e0a'),
+    ('55667788-99aa-bbcc-ddee-ff0011223346', 'Main image', 'http://localhost:12000/imf-files/images/img4.jpg', 'd6e7f8a9-b0c1-2d3e-4f5a-6b7c8d9e0f1b');
