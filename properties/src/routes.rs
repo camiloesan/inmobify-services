@@ -686,6 +686,7 @@ pub async fn get_user_property(
                         property.state_name,
                         property.zip_code,
                     ),
+                    priority: property.priority,
             };
                 
             HttpResponse::Ok().json(property_preview)

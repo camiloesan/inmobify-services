@@ -345,6 +345,7 @@ impl PropertiesRepository for PgProperties {
                 zip_code,
                 city_name,
                 states::name,
+                priority,
             ))
             .filter(p_id.eq(property_id))
             .first::<PropertyPreview>(conn);
