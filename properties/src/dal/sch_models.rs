@@ -135,6 +135,7 @@ pub struct PropertyWithDetails {
     pub property_type_id: i32,
     pub disposition: String,
     pub disposition_type_id: i32,
+    pub priority: i32,
 }
 
 #[derive(Queryable, Debug)]

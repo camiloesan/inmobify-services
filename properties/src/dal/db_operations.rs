@@ -5,6 +5,9 @@ use crate::{
 use diesel::{delete, insert_into, prelude::*};
 use log::error;
 use std::env;
+use uuid::Uuid;
+use std::collections::HashMap;
+use chrono::NaiveDateTime;
 
 use super::sch_models::{
     Location, NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State,
@@ -33,16 +36,18 @@ impl PropertiesRepository for PgProperties {
     fn fetch_properties(conn: &mut PgConnection) -> Vec<PropertyWithDetails> {
         use crate::dal::schema::disposition_types::dsl::*;
         use crate::dal::schema::locations::dsl::*;
-        use crate::dal::schema::properties::dsl::{properties, priority};
+        use crate::dal::schema::properties::dsl as properties_dsl;
+        use crate::dal::schema::property_status_history::dsl as history_dsl;
+        use crate::dal::schema::property_statuses::dsl as statuses_dsl;
         use crate::dal::schema::property_types::dsl as property_types;
         use crate::dal::schema::states::dsl as states;
 
-        let result = properties
+        let properties_result = properties_dsl::properties
             .inner_join(locations.inner_join(states::states))
             .inner_join(property_types::property_types)
             .inner_join(disposition_types)
             .select((
-                properties::all_columns(),
+                properties_dsl::properties::all_columns(),
                 street,
                 house_number,
                 neighborhood,
@@ -56,17 +61,48 @@ impl PropertiesRepository for PgProperties {
                 property_types::id,
                 disposition,
                 disposition_type_id,
+                properties_dsl::priority,
             ))
-            .order_by(priority.desc())
+            .order_by(properties_dsl::priority.desc())
             .load::<PropertyWithDetails>(conn);
 
-        match result {
-            Ok(list_properties) => list_properties,
+        let mut properties = match properties_result {
+            Ok(props) => props,
             Err(e) => {
-                error!("{}", e);
-                vec![]
+                log::error!("Error fetching properties: {}", e);
+                return vec![];
             }
+        };
+
+        let status_rows = history_dsl::property_status_history
+            .inner_join(statuses_dsl::property_statuses.on(history_dsl::status_id.eq(statuses_dsl::id)))
+            .select((
+                history_dsl::property_id,
+                statuses_dsl::status_name,
+                history_dsl::changed_at,
+            ))
+            .order((history_dsl::property_id, history_dsl::changed_at.desc()))
+            .load::<(Uuid, String, NaiveDateTime)>(conn);
+
+        let status_rows = match status_rows {
+            Ok(rows) => rows,
+            Err(e) => {
+                log::error!("Error fetching property statuses: {}", e);
+                return properties;
+            }
+        };
+
+        let mut last_status_map = HashMap::new();
+        for (property_id, status_name, _) in status_rows {
+            last_status_map.entry(property_id).or_insert(status_name);
         }
+
+        for prop in &mut properties {
+            let status = last_status_map.get(&prop.property.id);
+            log::info!("Property {} has status {:?}", prop.property.id, status);
+        }
+
+        properties
     }
 
     fn fetch_property_details(
@@ -99,6 +135,7 @@ impl PropertiesRepository for PgProperties {
                 property_types::id,
                 disposition,
                 disposition_type_id,
+                priority,
             ))
             .filter(p_id.eq(property_id))
             .first::<PropertyWithDetails>(conn);

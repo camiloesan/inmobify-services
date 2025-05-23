@@ -64,6 +64,7 @@ pub async fn fetch_properties(pool: web::Data<DbPool>) -> impl Responder {
                     sqm: p.property.sqm,
                     property_type: p.property_type,
                     disposition: p.disposition,
+                    priority: p.priority,
                 })
                 .collect();
 

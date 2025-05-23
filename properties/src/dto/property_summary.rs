@@ -32,4 +32,6 @@ pub struct PropertySummary {
     pub property_type: String,
     #[schema(example = "Sale/Rent", required = true)]
     pub disposition: String,
+    #[schema(example = "1", required = true)]
+    pub priority: i32,
 }
