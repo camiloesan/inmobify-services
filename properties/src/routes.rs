@@ -3,6 +3,7 @@ use std::str::FromStr;
 use crate::dal::sch_models::{UpdateLocation, UpdateProperty};
 use crate::dto::new_property::NewProperty;
 use crate::dto::property_detail::PropertyDetail;
+use crate::dto::property_preview::PropertyPreview;
 use crate::dto::update_image_path::UpdateImagePath;
 use crate::dto::update_property::UpdatedProperty;
 use crate::dto::update_property_priority::UpdatePropertyPriority;
@@ -643,6 +644,55 @@ async fn update_property_priority(
         }
         Err(e) => {
             error!("Error updating property priority: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Fetches the preview of a property by its ID
+#[get("/user-property-preview/{id}")]
+pub async fn get_user_property(
+    pool: web::Data<DbPool>,
+    property_id: web::Path<String>,
+) -> HttpResponse {
+    info!("Getting user property preview");
+
+    let result = web::block(move || {
+        let conn = pool.get();
+        match conn {
+            Ok(mut conn) => {
+                PgProperties::get_property_preview_by_property_id(&mut conn, uuid::Uuid::from_str(&property_id).unwrap())
+            }
+            Err(e) => {
+                error!("Failed to get connection from pool {}", e);
+                None
+            }
+        }
+    })
+    .await;
+
+    match result {
+        Ok(Some(property)) => {
+            let property_preview = PropertyPreview {
+                id: property.id.to_string(),
+                    title: property.title,
+                    location: format!(
+                        "{} {} {} {} {} {}",
+                        property.street,
+                        property.house_number,
+                        property.neighborhood,
+                        property.city_name,
+                        property.state_name,
+                        property.zip_code,
+                    ),
+            };
+                
+            HttpResponse::Ok().json(property_preview)
+        }
+
+        Ok(None) => HttpResponse::NotFound().finish(),
+        Err(e) => {
+            error!("Failed to get property preview: {}", e);
             HttpResponse::InternalServerError().finish()
         }
     }

@@ -64,4 +64,8 @@ pub trait PropertiesRepository {
         property_id: uuid::Uuid,
         new_priority: i32,
     ) -> Result<i32, diesel::result::Error>;
+    fn get_property_preview_by_property_id(
+        conn: &mut PgConnection,
+        property_id: uuid::Uuid,
+    ) -> Option<PropertyPreview>;
 }
