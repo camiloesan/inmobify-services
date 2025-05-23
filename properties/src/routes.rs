@@ -155,7 +155,7 @@ pub async fn update_property(
         n_rooms: Some(property.n_rooms),
         n_bathrooms: Some(property.n_bathrooms),
         sqm: Some(property.sqm),
-        priority: Some(property.priority),
+        priority: None,
         price: Some(property.price),
         modified_at: Some(chrono::Utc::now().naive_utc()),
         property_type_id: Some(property.property_type_id),
@@ -662,9 +662,10 @@ pub async fn get_user_property(
     let result = web::block(move || {
         let conn = pool.get();
         match conn {
-            Ok(mut conn) => {
-                PgProperties::get_property_preview_by_property_id(&mut conn, uuid::Uuid::from_str(&property_id).unwrap())
-            }
+            Ok(mut conn) => PgProperties::get_property_preview_by_property_id(
+                &mut conn,
+                uuid::Uuid::from_str(&property_id).unwrap(),
+            ),
             Err(e) => {
                 error!("Failed to get connection from pool {}", e);
                 None
@@ -677,19 +678,19 @@ pub async fn get_user_property(
         Ok(Some(property)) => {
             let property_preview = PropertyPreview {
                 id: property.id.to_string(),
-                    title: property.title,
-                    location: format!(
-                        "{} {} {} {} {} {}",
-                        property.street,
-                        property.house_number,
-                        property.neighborhood,
-                        property.city_name,
-                        property.state_name,
-                        property.zip_code,
-                    ),
-                    priority: property.priority,
+                title: property.title,
+                location: format!(
+                    "{} {} {} {} {} {}",
+                    property.street,
+                    property.house_number,
+                    property.neighborhood,
+                    property.city_name,
+                    property.state_name,
+                    property.zip_code,
+                ),
+                priority: property.priority,
             };
-                
+
             HttpResponse::Ok().json(property_preview)
         }
 
