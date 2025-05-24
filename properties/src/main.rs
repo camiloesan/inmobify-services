@@ -1,23 +1,32 @@
 mod dal;
-mod routes;
 mod dto;
+mod routes;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use diesel::{prelude::*, r2d2};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 use env_logger::Env;
 use std::env;
+use jwt::validate_jwt;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
 
+fn load_env() {
+    let first_try = dotenv();
+    if first_try.is_err() {
+        dotenvy::from_path(std::path::Path::new("properties/.env")).expect("dotenvy failed");
+    }
+}
+
 /// Run diesel migrations at compile-time
 fn run_migrations() {
-    dotenv().ok();
+    load_env();
     let url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
     let mut conn = PgConnection::establish(&url).expect("Failed to establish connection");
     conn.run_pending_migrations(MIGRATIONS)
@@ -33,13 +42,12 @@ fn initialize_db_pool() -> DbPool {
         .expect("database URL should be valid path to postgresql server")
 }
 
-
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     run_migrations();
 
-    let pool = initialize_db_pool();  
+    let pool = initialize_db_pool();
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -48,19 +56,39 @@ async fn main() -> std::io::Result<()> {
             .allow_any_header();
 
         #[derive(OpenApi)]
-        #[openapi(paths(routes::fetch_boosted_properties), components(schemas(dto::property_summary::PropertySummary)))]
+        #[openapi(
+            paths(routes::fetch_properties),
+            components(schemas(dto::property_summary::PropertySummary))
+        )]
         struct ApiDoc;
         let openapi = ApiDoc::openapi();
 
         App::new()
             .app_data(web::Data::new(pool.clone()))
+            .wrap(cors)
             .service(
                 SwaggerUi::new("/swagger-ui/{_:.*}").url("/api-docs/openapi.json", openapi.clone()),
             )
-            .service(routes::fetch_boosted_properties)
-            .wrap(cors)
+            .service(routes::fetch_properties)
+            .service(routes::fetch_property_details)
+            .service(routes::create_property)
+            .service(routes::update_image_path)
+            .service(routes::get_states)
+            .service(routes::get_user_properties)
+            .service(routes::delete_property)
+            .service(routes::update_property)
+            .service(routes::update_property_priority)
+            .service(routes::insert_images_by_property)
+            .service(routes::fetch_images_by_property)
+            .service(routes::delete_all_property_images)
+            .service(routes::delete_image_by_uuid)
+            .service(
+                web::scope("")
+                    .wrap(HttpAuthentication::bearer(validate_jwt))
+                    .service(routes::get_user_property)
+            )
     })
-    .bind("0.0.0.0:12000")?
+    .bind("0.0.0.0:12004")?
     .run()
     .await
 }

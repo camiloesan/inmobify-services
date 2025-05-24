@@ -1,0 +1,30 @@
+services:
+  appointments:
+    build: 
+      context: .
+      dockerfile: appointments/Dockerfile
+    env_file:
+      - appointments/.env
+    image: appointments:latest
+    ports:
+      - "12001:12000"
+    depends_on:
+      - appointments_db
+  appointments_db:
+    container_name: appointments_db
+    image: postgres:latest
+    restart: always
+    env_file:
+      - appointments/.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_appointments"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5433:5432"
+    volumes:
+      - appointments_data:/var/lib/postgresql/data
+volumes:
+  appointments_data:
+    driver: local

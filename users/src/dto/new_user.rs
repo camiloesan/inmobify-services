@@ -22,15 +22,5 @@ pub struct NewUser {
 
     #[schema(example = "Sheinbaum", required = true)]
     #[validate(length(min = 1, max = 255, message = "El campo contraseña es obligatorio"))]
-    #[validate(regex(path = "*PASSWORD_REGEX", message = "La contraseña debe tener al menos una mayúscula, una minúscula, un número y un caracter especial"))]
     pub password: String,
-
-    #[schema(example = "1", required = true)]
-    #[validate(range(min = 1, max = 2, message = "El campo tipo de usuario es obligatorio"))]
-    pub user_type_id: i32,
-}
-
-lazy_static::lazy_static! {
-    static ref PASSWORD_REGEX: regex::Regex = 
-    regex::Regex::new(r"^[a-zA-Z\d[^a-zA-Z\d]]{8,12}$").unwrap();
 }

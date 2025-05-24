@@ -1,6 +1,6 @@
 services:
   appointments:
-    build: 
+    build:
       context: .
       dockerfile: appointments/Dockerfile
     env_file:
@@ -16,8 +16,10 @@ services:
     restart: always
     env_file:
       - appointments/.env
+      - auth/.env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_appointments"]
+      test:
+        ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_appointments"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,34 +38,8 @@ services:
       - "12002:12000"
     depends_on:
       - users_db
-  payments:
-    build:
-      context: .
-      dockerfile: payments/Dockerfile
-    env_file:
-      - payments/.env
-    image: payments:latest
-    ports:
-      - "12003:12000"
-    depends_on:
-      - payments_db
-  payments_db:
-    container_name: payments_db
-    image: postgres:latest
-    restart: always
-    env_file:
-      - payments/.env
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_payments"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    ports:
-      - "5434:5432"
-    volumes:
-      - payments_data:/var/lib/postgresql/data
   properties:
-    build: 
+    build:
       context: .
       dockerfile: properties/Dockerfile
     env_file:
@@ -79,6 +55,7 @@ services:
     restart: always
     env_file:
       - properties/.env
+      - auth/.env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_properties"]
       interval: 10s
@@ -89,11 +66,12 @@ services:
     volumes:
       - properties_data:/var/lib/postgresql/data
   users:
-    build: 
+    build:
       context: .
       dockerfile: users/Dockerfile
     env_file:
       - users/.env
+      - auth/.env
     image: users:latest
     ports:
       - "12005:12000"
@@ -115,7 +93,7 @@ services:
     volumes:
       - users_data:/var/lib/postgresql/data
   file_server:
-    build: 
+    build:
       context: .
       dockerfile: file_server/Dockerfile
     image: file_server:latest
@@ -130,12 +108,5 @@ volumes:
     driver: local
   properties_data:
     driver: local
-  payments_data:
-    driver: local
   file_storage:
     driver: local
-
-
-  
-
-

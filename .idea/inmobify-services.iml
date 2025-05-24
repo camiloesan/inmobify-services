@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/appointments/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/auth/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/file_server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/payments/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/properties/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/users/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gateway/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/jwt/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/properties/tests" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

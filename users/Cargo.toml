@@ -7,7 +7,12 @@ edition = "2021"
 dotenvy = { workspace = true }
 log = { workspace = true }
 env_logger = { workspace = true }
-diesel = { version = "2.2.0", features = ["postgres", "uuid", "chrono"] }
+diesel = { version = "2.2.0", features = [
+    "postgres",
+    "r2d2",
+    "uuid",
+    "chrono",
+] }
 diesel_migrations = "*"
 uuid = { version = "1.4", features = ["v4"] }
 chrono = "*"
@@ -21,3 +26,5 @@ validator = { version = "0.20.0", features = ["derive"] }
 actix-web-validator = "6.0.0"
 lazy_static = "1.5.0"
 regex = "1.11.1"
+jwt = { path = "../jwt" }
+actix-web-httpauth = "0.6"

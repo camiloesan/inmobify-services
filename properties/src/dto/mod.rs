@@ -1,2 +1,10 @@
-pub mod property_summary;
+pub mod image;
+pub mod new_image;
+pub mod new_property;
 pub mod property_detail;
+pub mod property_preview;
+pub mod property_summary;
+pub mod state;
+pub mod update_image_path;
+pub mod update_property;
+pub mod update_property_priority;
