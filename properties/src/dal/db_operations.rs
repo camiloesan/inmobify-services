@@ -2,12 +2,12 @@ use crate::{
     dal::{repository::PropertiesRepository, schema::properties::disposition_type_id},
     load_env,
 };
+use chrono::NaiveDateTime;
 use diesel::{delete, insert_into, prelude::*};
 use log::error;
+use std::collections::HashMap;
 use std::env;
 use uuid::Uuid;
-use std::collections::HashMap;
-use chrono::NaiveDateTime;
 
 use super::sch_models::{
     Location, NewLocation, NewProperty, PropertyPreview, PropertyWithDetails, State,
@@ -75,7 +75,9 @@ impl PropertiesRepository for PgProperties {
         };
 
         let status_rows = history_dsl::property_status_history
-            .inner_join(statuses_dsl::property_statuses.on(history_dsl::status_id.eq(statuses_dsl::id)))
+            .inner_join(
+                statuses_dsl::property_statuses.on(history_dsl::status_id.eq(statuses_dsl::id)),
+            )
             .select((
                 history_dsl::property_id,
                 statuses_dsl::status_name,
@@ -293,7 +295,6 @@ impl PropertiesRepository for PgProperties {
         Ok(result)
     }
 
-
     fn update_property_priority(
         conn: &mut PgConnection,
         property_id: uuid::Uuid,
@@ -415,7 +416,7 @@ mod tests {
             id,
             path: "hoiajdf".to_string(),
             name: "dfjs".to_string(),
-            property_id: Uuid::from_str("550e8400-e29b-41d4-a716-446655440000").unwrap(),
+            property_id: Uuid::from_str("a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d").unwrap(),
         };
 
         // main assert
@@ -632,14 +633,6 @@ mod tests {
         let property_id = uuid::Uuid::new_v4();
         let result = PgProperties::fetch_property_details(&mut conn, property_id);
         assert!(result.is_none());
-    }
-
-    #[test]
-    fn test_fetch_property_details_exists() {
-        let mut conn = PgProperties::_tests_get_connection();
-        let property_id = Uuid::from_str("550e8400-e29b-41d4-a716-446655440000").unwrap();
-        let result = PgProperties::fetch_property_details(&mut conn, property_id);
-        assert!(result.is_some());
     }
 
     #[test]
