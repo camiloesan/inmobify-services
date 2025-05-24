@@ -11,4 +11,9 @@ pub trait AppointmentsRepository {
         conn: &mut PgConnection,
         user_id: uuid::Uuid,
     ) -> Result<Vec<ProspectSummary>, diesel::result::Error>;
+    fn check_prospect_exists(
+        conn: &mut PgConnection,
+        check_property_id: uuid::Uuid,
+        check_email: &str, 
+    ) -> Result<bool, diesel::result::Error>;
 }
