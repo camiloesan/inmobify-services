@@ -3,7 +3,7 @@ mod dto;
 mod routes;
 
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer};
+use actix_web::{web::{self}, App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use diesel::{prelude::*, r2d2};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
@@ -69,6 +69,7 @@ async fn main() -> std::io::Result<()> {
                 SwaggerUi::new("/swagger-ui/{_:.*}")
                     .url("/api-docs/openapi.json", openapi.clone()),
             )
+            .service(routes::check_prospect_exists)
             .service(
                 web::scope("")
                     .wrap(HttpAuthentication::bearer(validate_jwt))

@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use crate::dto::check_prospect::CheckProspect;
 use crate::dto::new_prospect::NewProspect;
 use crate::DbPool;
 use crate::dal::{db_operations::PgAppointments, repository::AppointmentsRepository};
@@ -48,7 +49,7 @@ pub async fn create_prospect(
     }
 }
 
-/// Get appointments
+/// Get prospects
 #[get("/user-prospects/{id}")]
 pub async fn get_user_prospects(
     pool: web::Data<DbPool>,
@@ -80,6 +81,31 @@ pub async fn get_user_prospects(
         }
         Err(e) => {
             error!("Error getting user prospects: {}", e);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Check if a prospect exists for a given property_id and email
+#[post("/prospect/exists")]
+pub async fn check_prospect_exists(
+    pool: web::Data<DbPool>,
+    input: web::Json<CheckProspect>,
+) -> impl Responder {
+    info!("request to check if prospect exists received");
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+        let id = Uuid::from_str(&input.property_id).unwrap();
+        let exists = PgAppointments::check_prospect_exists(&mut conn, id, &input.email).unwrap();
+        exists
+    })
+    .await;
+
+    match result {
+        Ok(exists) => HttpResponse::Ok().json(exists),
+        Err(err) => {
+            error!("Failed to check prospect existence: {}", err);
             HttpResponse::InternalServerError().finish()
         }
     }

@@ -10,9 +10,9 @@ impl PgAppointments {}
 
 impl AppointmentsRepository for PgAppointments {
     fn create_prospect(
-            conn: &mut PgConnection,
-            prospect: NewProspect,
-        ) -> Result<uuid::Uuid, diesel::result::Error> {
+        conn: &mut PgConnection,
+        prospect: NewProspect,
+    ) -> Result<uuid::Uuid, diesel::result::Error> {
         use crate::dal::schema::prospects::dsl::*;
 
         diesel::insert_into(prospects)
@@ -41,5 +41,24 @@ impl AppointmentsRepository for PgAppointments {
             .order(created_at.desc())
             .load::<super::sch_models::ProspectSummary>(conn)?;
         Ok(result)
+    }
+
+    fn check_prospect_exists(
+        conn: &mut PgConnection,
+        check_property_id: uuid::Uuid,
+        check_email: &str,
+    ) -> Result<bool, diesel::result::Error> {
+        use crate::dal::schema::prospects::id as p_id;
+        use crate::dal::schema::prospects::dsl::*;
+        use crate::dal::schema::prospects::dsl::{property_id, email};
+
+        let exists = prospects
+            .select(p_id)
+            .filter(property_id.eq(check_property_id).and(email.eq(check_email)))
+            .first::<uuid::Uuid>(conn)
+            .optional()?
+            .is_some();
+
+        Ok(exists)
     }
 }
