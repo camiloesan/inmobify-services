@@ -16,8 +16,26 @@ jobs:
           POSTGRES_PASSWORD: 123456
           POSTGRES_DB: inmobify_users
         ports:
-          - 5432:5432
+          - 5436:5432
         options: --health-cmd="pg_isready -U inmobify_user -d inmobify_users" --health-interval=10s --health-timeout=5s --health-retries=3
+      properties_db:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: inmobify_user
+          POSTGRES_PASSWORD: 123456
+          POSTGRES_DB: inmobify_properties
+        ports:
+          - 5435:5432
+        options: --health-cmd="pg_isready -U inmobify_user -d inmobify_properties" --health-interval=10s --health-timeout=5s --health-retries=3
+      appointments_db:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: inmobify_user
+          POSTGRES_PASSWORD: 123456
+          POSTGRES_DB: inmobify_appointments
+        ports:
+          - 5433:5432
+        options: --health-cmd="pg_isready -U inmobify_user -d inmobify_appointments" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout code
@@ -29,20 +47,56 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: build and test
-        env:
-          DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5432/inmobify_users
-          LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5432/inmobify_users
-        run: |
-          cargo build -p users
+      - name: Build worspace
+        run: cargo build
 
+      - name: run users
+        env:
+          DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
+          LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
+        run: |
           cargo run -p users &
           PROJECT_PID=$!
           echo "Project running with PID: $PROJECT_PID"
-
-          sleep 7
-
+          sleep 6
           kill $PROJECT_PID
           echo "Project stopped."
 
-          cargo test -p users
+      - name: run properties
+        env:
+          DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5435/inmobify_properties
+          LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5435/inmobify_properties
+        run: |
+          cargo run -p properties &
+          PROJECT_PID=$!
+          echo "Project running with PID: $PROJECT_PID"
+          sleep 6
+          kill $PROJECT_PID
+          echo "Project stopped."
+
+      - name: run appointments
+        env:
+          DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5433/inmobify_appointments
+          LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5433/inmobify_appointments
+        run: |
+          cargo run -p appointments &
+          PROJECT_PID=$!
+          echo "Project running with PID: $PROJECT_PID"
+          sleep 6
+          kill $PROJECT_PID
+          echo "Project stopped."
+
+      - name: run auth
+        env:
+          DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
+          LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
+        run: |
+          cargo run -p auth &
+          PROJECT_PID=$!
+          echo "Project running with PID: $PROJECT_PID"
+          sleep 6
+          kill $PROJECT_PID
+          echo "Project stopped."
+
+      - name: Run tests
+        run: cargo test
