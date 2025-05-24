@@ -47,11 +47,14 @@ jobs:
           profile: minimal
           toolchain: stable
 
-      - name: run users
+      - name: run users tests
         env:
           DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
           LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
         run: |
+          mkdir -p users
+          echo "DATABASE_URL=postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users" > users/.env
+          echo "LOCAL_DB_URL=postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users" > users/.env
           cargo build -p users
           cargo run -p users &
           PROJECT_PID=$!
@@ -59,12 +62,16 @@ jobs:
           sleep 6
           kill $PROJECT_PID
           echo "Project stopped."
+          cargo test -p users
 
-      - name: run properties
+      - name: run properties tests
         env:
           DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5435/inmobify_properties
           LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5435/inmobify_properties
         run: |
+          mkdir -p properties
+          echo "DATABASE_URL=postgres://inmobify_user:123456@127.0.0.1:5435/inmobify_properties" > properties/.env
+          echo "LOCAL_DB_URL=postgres://inmobify_user:123456@127.0.0.1:5435/inmobify_properties" > properties/.env
           cargo build -p properties
           cargo run -p properties &
           PROJECT_PID=$!
@@ -72,12 +79,16 @@ jobs:
           sleep 6
           kill $PROJECT_PID
           echo "Project stopped."
+          cargo test -p properties
 
-      - name: run appointments
+      - name: run appointments tests
         env:
           DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5433/inmobify_appointments
           LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5433/inmobify_appointments
         run: |
+          mkdir -p appointments
+          echo "DATABASE_URL=postgres://inmobify_user:123456@127.0.0.1:5433/inmobify_appointments" > appointments/.env
+          echo "LOCAL_DB_URL=postgres://inmobify_user:123456@127.0.0.1:5433/inmobify_appointments" > appointments/.env
           cargo build -p appointments
           cargo run -p appointments &
           PROJECT_PID=$!
@@ -85,12 +96,16 @@ jobs:
           sleep 20
           kill $PROJECT_PID
           echo "Project stopped."
+          cargo test -p appointments
 
-      - name: run auth
+      - name: run auth tests
         env:
           DATABASE_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
           LOCAL_DB_URL: postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users
         run: |
+          mkdir -p auth
+          echo "DATABASE_URL=postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users" > auth/.env
+          echo "LOCAL_DB_URL=postgres://inmobify_user:123456@127.0.0.1:5436/inmobify_users" > auth/.env
           cargo build -p auth
           cargo run -p auth &
           PROJECT_PID=$!
@@ -98,6 +113,4 @@ jobs:
           sleep 20
           kill $PROJECT_PID
           echo "Project stopped."
-
-      - name: Run tests
-        run: cargo test
+          cargo test -p auth
