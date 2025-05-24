@@ -79,8 +79,8 @@ services:
     image: postgres:latest
     restart: always
     env_file:
-      - auth/.env
       - properties/.env
+      - auth/.env
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U inmobify_user -d inmobify_properties"]
       interval: 10s
