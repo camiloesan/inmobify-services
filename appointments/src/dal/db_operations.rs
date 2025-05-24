@@ -53,7 +53,7 @@ impl AppointmentsRepository for PgAppointments {
         use crate::dal::schema::prospects::dsl::{property_id, email};
 
         let exists = prospects
-            .select(p_id) // Cambiado de .select((p_id,)) a .select(p_id)
+            .select(p_id)
             .filter(property_id.eq(check_property_id).and(email.eq(check_email)))
             .first::<uuid::Uuid>(conn)
             .optional()?

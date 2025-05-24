@@ -49,7 +49,7 @@ pub async fn create_prospect(
     }
 }
 
-/// Get appointments
+/// Get prospects
 #[get("/user-prospects/{id}")]
 pub async fn get_user_prospects(
     pool: web::Data<DbPool>,
