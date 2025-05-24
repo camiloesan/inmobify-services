@@ -5,7 +5,6 @@ members = [
     "auth",
     "users",
     "properties",
-    "payments",
     "appointments",
     "file_server",
     "gateway",
