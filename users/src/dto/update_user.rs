@@ -21,6 +21,6 @@ pub struct UpdateUser {
     pub phone: Option<String>,
 
     #[schema(example = "Sheinbaum", required = false)]
-    #[validate(length(min = 1, max = 255, message = "El campo contraseña es obligatorio"))]
+    #[validate(length(min = 8, max = 20, message = "El campo contraseña es obligatorio"))]
     pub password: Option<String>
 }
