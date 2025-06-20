@@ -57,7 +57,7 @@ async fn main() -> std::io::Result<()> {
 
         #[derive(OpenApi)]
         #[openapi(
-            
+
         )]
         struct ApiDoc;
         let openapi = ApiDoc::openapi();
@@ -75,6 +75,7 @@ async fn main() -> std::io::Result<()> {
                     .wrap(HttpAuthentication::bearer(validate_jwt))
                     .service(routes::create_prospect)
                     .service(routes::get_user_prospects)
+                    .service(routes::create_transaction)
             )
     })
     .bind("0.0.0.0:12001")?

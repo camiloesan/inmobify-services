@@ -6,4 +6,5 @@ pub struct PropertyPreview {
     pub title: String,
     pub location: String,
     pub priority: i32,
+    pub disposition_type_id: i32
 }

@@ -1,7 +1,7 @@
 use crate::dal::repository::AppointmentsRepository;
 use diesel::prelude::*;
 
-use super::sch_models::NewProspect;
+use super::sch_models::{NewProspect, NewTransaction};
 
 #[derive(Clone)]
 pub struct PgAppointments {}
@@ -20,7 +20,7 @@ impl AppointmentsRepository for PgAppointments {
         .execute(conn)?;
     Ok(prospect.id)
     }
-    
+
     fn get_prospects_by_user_id(
         conn: &mut PgConnection,
         user_id: uuid::Uuid,
@@ -60,5 +60,18 @@ impl AppointmentsRepository for PgAppointments {
             .is_some();
 
         Ok(exists)
+    }
+
+    fn create_transaction(
+        conn: &mut PgConnection,
+        transaction: NewTransaction,
+    ) -> Result<uuid::Uuid, diesel::result::Error> {
+        use crate::dal::schema::transactions::dsl::*;
+
+        diesel::insert_into(transactions)
+        .values(&transaction)
+        .execute(conn)?;
+
+        Ok(transaction.id)
     }
 }

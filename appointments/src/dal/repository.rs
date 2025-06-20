@@ -1,6 +1,6 @@
 use diesel::PgConnection;
 
-use super::sch_models::{NewProspect, ProspectSummary};
+use super::sch_models::{NewProspect, ProspectSummary, NewTransaction};
 
 pub trait AppointmentsRepository {
     fn create_prospect(
@@ -14,6 +14,10 @@ pub trait AppointmentsRepository {
     fn check_prospect_exists(
         conn: &mut PgConnection,
         check_property_id: uuid::Uuid,
-        check_email: &str, 
+        check_email: &str,
     ) -> Result<bool, diesel::result::Error>;
+    fn create_transaction(
+        conn: &mut PgConnection,
+        transaction: NewTransaction,
+    ) -> Result<uuid::Uuid, diesel::result::Error>;
 }

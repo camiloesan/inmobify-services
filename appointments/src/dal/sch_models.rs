@@ -1,4 +1,4 @@
-use crate::dal::schema::prospects;
+use crate::dal::schema::{prospects, transactions};
 
 use diesel::prelude::*;
 use uuid::Uuid;
@@ -26,3 +26,11 @@ pub struct ProspectSummary {
     pub property_id: Uuid,
 }
 
+#[derive(Insertable, Debug)]
+#[diesel(table_name = transactions)]
+pub struct NewTransaction {
+    pub id: Uuid,
+    pub prospect_id: Uuid,
+    pub transaction_type_id: i32,
+    pub property_id: Uuid
+}

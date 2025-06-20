@@ -286,6 +286,7 @@ impl PropertiesRepository for PgProperties {
                 city_name,
                 states::name,
                 priority,
+                disposition_type_id
             ))
             .filter(owner_id.eq(user_id))
             .order(created_at.desc())
@@ -384,6 +385,7 @@ impl PropertiesRepository for PgProperties {
                 city_name,
                 states::name,
                 priority,
+                disposition_type_id
             ))
             .filter(p_id.eq(property_id))
             .first::<PropertyPreview>(conn);

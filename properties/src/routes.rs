@@ -547,6 +547,7 @@ pub async fn get_user_properties(
                         property.zip_code,
                     ),
                     priority: property.priority,
+                    disposition_type_id: property.disposition_type_id,
                 })
                 .collect::<Vec<_>>();
             HttpResponse::Ok().json(dto)
@@ -689,6 +690,7 @@ pub async fn get_user_property(
                     property.zip_code,
                 ),
                 priority: property.priority,
+                disposition_type_id: property.disposition_type_id,
             };
 
             HttpResponse::Ok().json(property_preview)

@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use crate::dto::check_prospect::CheckProspect;
 use crate::dto::new_prospect::NewProspect;
+use crate::dto::new_transaction::NewTransaction;
 use crate::DbPool;
 use crate::dal::{db_operations::PgAppointments, repository::AppointmentsRepository};
 use actix_web::post;
@@ -106,6 +107,39 @@ pub async fn check_prospect_exists(
         Ok(exists) => HttpResponse::Ok().json(exists),
         Err(err) => {
             error!("Failed to check prospect existence: {}", err);
+            HttpResponse::InternalServerError().finish()
+        }
+    }
+}
+
+/// Create a new transaction (sale or lease) for a given prospect
+#[post("/transaction")]
+pub async fn create_transaction(
+    pool: web::Data<DbPool>,
+    input: web::Json<NewTransaction>,
+) -> impl Responder {
+    info!("request to create a new transaction received");
+
+    let result = web::block(move || {
+        let mut conn = pool.get().unwrap();
+
+        let transaction = crate::dal::sch_models::NewTransaction {
+            id: Uuid::new_v4(),
+            prospect_id: Uuid::from_str(&input.prospect_id).unwrap(),
+            transaction_type_id: input.transaction_type_id,
+            property_id: Uuid::from_str(&input.property_id).unwrap(),
+        };
+
+        let transaction_id = PgAppointments::create_transaction(&mut conn, transaction).unwrap();
+
+        transaction_id
+    })
+    .await;
+
+    match result {
+        Ok(transaction_id) => HttpResponse::Ok().json(transaction_id),
+        Err(err) => {
+            error!("Failed to create transaction: {}", err);
             HttpResponse::InternalServerError().finish()
         }
     }
